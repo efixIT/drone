@@ -1,54 +1,170 @@
-(function() {
-  const gallery = document.getElementById('gallery');
-  if (!gallery) {
-    document.body.innerHTML += '<p style="color:#ff6666;">Gallery container missing.</p>';
-    return;
-  }
-  gallery.innerHTML = ''; // clear loading
-
-  // Add your models here – easy to expand
-  const models = [
-    {
-      file: 'mfs-gaussian.html',
-      title: 'MFS Gaussian',
-      thumb: 'mfs-gaussian-thumb.png'
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>eFixit Support – Market Field School Models</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #0a2540;
+      color: #fff;
+      margin: 0;
+      padding: 20px 10px;
+      text-align: center;
     }
-    // Add new ones like:
-    // { file: 'sports-field.html', title: 'Sports Field', thumb: 'sports-field-thumb.png' },
-  ];
+    h1 {
+      color: #00bfff;
+      margin: 20px 0 40px;
+    }
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 25px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .card {
+      background: #1a3a5e;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+      transition: transform 0.25s, box-shadow 0.25s;
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      flex-direction: column;
+    }
+    .card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 12px 30px rgba(0,191,255,0.4);
+    }
+    .thumbnail {
+      width: 100%;
+      height: 160px;
+      object-fit: cover;
+      background: #000;
+    }
+    .placeholder {
+      height: 160px;
+      background: #333;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2em;
+      color: #888;
+    }
+    .info {
+      padding: 12px;
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .title {
+      font-size: 1.1em;
+      margin: 8px 0 4px;
+    }
+    .desc {
+      font-size: 0.85em;
+      opacity: 0.8;
+      margin-top: auto;
+    }
+    footer {
+      margin-top: 60px;
+      opacity: 0.7;
+      font-size: 0.9em;
+    }
+  </style>
+</head>
+<body>
 
-  if (models.length === 0) {
-    gallery.innerHTML = '<p>No models added yet.</p>';
-    return;
-  }
+  <h1>Market Field School – 3D Models</h1>
+  
+  <div id="gallery">
+    <p>Loading models...</p>
+  </div>
 
-  models.forEach(m => {
-    const card = document.createElement('a');
-    card.href = m.file;
-    card.className = 'card';
-    card.target = '_blank';
+  <footer>
+    © eFixit Support • Elmstead Market, England • January 2026 • 
+    <a href="mailto:hello@efixit.support" style="color: #00bfff;">Contact us</a>
+  </footer>
 
-    const img = new Image();
-    img.src = m.thumb;
-    img.className = 'thumbnail';
-    img.loading = 'lazy';
-    img.alt = m.title;
-    img.onerror = () => {
-      const ph = document.createElement('div');
-      ph.className = 'placeholder';
-      ph.textContent = 'No Preview';
-      card.querySelector('div').innerHTML = '';
-      card.querySelector('div').appendChild(ph);
-    };
+  <script>
+    (function() {
+      const gallery = document.getElementById('gallery');
+      
+      if (!gallery) {
+        document.body.innerHTML += '<p style="color:#ff6666; font-weight:bold;">Error: Gallery container missing – check HTML structure.</p>';
+        return;
+      }
 
-    card.innerHTML = `
-      <div class="thumb-container">${img.outerHTML}</div>
-      <div class="info">
-        <div class="title">${m.title}</div>
-        <div class="desc">Gaussian splat model • Click to inspect</div>
-      </div>
-    `;
+      gallery.innerHTML = ''; // clear "Loading models..."
 
-    gallery.appendChild(card);
-  });
-})();
+      // === MANUAL MODEL LIST ===
+      // Add new entries here when you upload a new .html + -thumb.png pair
+      const models = [
+        {
+          file: 'mfs-gaussian.html',
+          title: 'MFS Gaussian',
+          thumb: 'mfs-gaussian-thumb.png'
+        },
+
+        // PLACEHOLDER SLOT 1 – copy-paste and fill in when ready
+        // {
+        //   file: 'your-new-model.html',
+        //   title: 'New Model Name',
+        //   thumb: 'your-new-model-thumb.png'
+        // },
+
+        // PLACEHOLDER SLOT 2 – copy-paste and fill in when ready
+        // {
+        //   file: 'another-model.html',
+        //   title: 'Another Model',
+        //   thumb: 'another-model-thumb.png'
+        // }
+      ];
+
+      if (models.length === 0) {
+        gallery.innerHTML = '<p>No models added yet. Add entries to the models array in the script.</p>';
+        return;
+      }
+
+      models.forEach(model => {
+        const card = document.createElement('a');
+        card.href = model.file;
+        card.className = 'card';
+        card.target = '_blank'; // opens in new tab – remove this line if you prefer same tab
+
+        const img = new Image();
+        img.src = model.thumb;
+        img.alt = model.title;
+        img.className = 'thumbnail';
+        img.loading = 'lazy';
+
+        img.onerror = () => {
+          const placeholder = document.createElement('div');
+          placeholder.className = 'placeholder';
+          placeholder.textContent = 'No Preview';
+          const container = card.querySelector('.thumb-container');
+          if (container) {
+            container.innerHTML = '';
+            container.appendChild(placeholder);
+          }
+        };
+
+        card.innerHTML = `
+          <div class="thumb-container">${img.outerHTML}</div>
+          <div class="info">
+            <div class="title">${model.title}</div>
+            <div class="desc">Gaussian splat model • Click to view & inspect</div>
+          </div>
+        `;
+
+        gallery.appendChild(card);
+      });
+    })();
+  </script>
+
+</body>
+</html>
