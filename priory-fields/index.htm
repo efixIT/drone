@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>eFixit Support – Gaussian Splat Models</title>
+  <title>eFixit Support – Market Field School Models</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -75,42 +75,47 @@
       opacity: 0.7;
       font-size: 0.9em;
     }
+    .error-msg {
+      color: #ff6666;
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
 
-  <h1>Priory Fields Development Imagary</h1>
+  <h1>Market Field School – 3D Models</h1>
   
-  <div class="gallery" id="gallery">
+  <div id="gallery">
     <p>Loading models...</p>
   </div>
 
   <footer>
-    © eFixit Support • Brightlingsea, England • January 2026 • 
+    © eFixit Support • Elmstead Market, England • January 2026 • 
     <a href="mailto:hello@efixit.support" style="color: #00bfff;">Contact us</a>
   </footer>
 
   <script>
     (async function() {
       const gallery = document.getElementById('gallery');
-      gallery.innerHTML = ''; // clear loading text
+      
+      if (!gallery) {
+        document.body.innerHTML += '<p class="error-msg">Critical error: Gallery container missing.</p>';
+        return;
+      }
 
-      // === CONFIG ===
+      gallery.innerHTML = '<p>Loading models...</p>';
+
       const owner = 'efixIT';
       const repo = 'drone';
-      const branch = 'main'; // change if using master or other
-      // Optional: personal access token for higher rate limits (classic token, read:contents scope)
-      // const token = 'ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx';
-      // If using token: add to headers below → 'Authorization': `Bearer ${token}`,
+      const branch = 'main';
+      const token = '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';  // ← your token is here
 
-      // Get current folder path from URL (works when index.html is in /MFS/, /Another/, etc.)
       let currentPath = window.location.pathname
-        .replace(/\/index\.html$/, '')     // remove index.html
-        .replace(/\/$/, '')                // remove trailing slash
-        .split('/').filter(p => p).join('/'); // clean
+        .replace(/\/index\.html?$/, '')
+        .replace(/\/index\.htm?$/, '')
+        .replace(/\/$/, '');
 
-      if (currentPath) currentPath += '/'; // e.g. "MFS/"
-      // Root folder → currentPath = ''
+      if (currentPath) currentPath += '/';
 
       const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${currentPath}?ref=${branch}`;
 
@@ -118,22 +123,21 @@
         const response = await fetch(apiUrl, {
           headers: {
             'Accept': 'application/vnd.github+json',
-            'X-GitHub-Api-Version': '2022-11-28',
-            // 'Authorization': `Bearer ${token}`, // uncomment & add token if needed
+            'Authorization': `Bearer ${token}`,
+            'User-Agent': 'eFixitSupport-Gallery/1.0[](https://efixit.support)'
           }
         });
 
         if (!response.ok) {
-          throw new Error(`GitHub API error: ${response.status} ${response.statusText}`);
+          throw new Error(`GitHub API failed: ${response.status} ${response.statusText}`);
         }
 
         const items = await response.json();
 
-        // Filter only .html files (ignore index.html itself, dirs, other files)
         const htmlFiles = items.filter(item => 
           item.type === 'file' && 
           item.name.toLowerCase().endsWith('.html') &&
-          item.name.toLowerCase() !== 'index.html'
+          !item.name.toLowerCase().includes('index')
         );
 
         if (htmlFiles.length === 0) {
@@ -141,29 +145,33 @@
           return;
         }
 
+        gallery.innerHTML = '';
+
         htmlFiles.forEach(file => {
           const nameWithoutExt = file.name.replace(/\.html$/i, '');
-          // Predict thumbnail: same name + -thumb.jpg in same folder
-          const thumbUrl = `${currentPath}${nameWithoutExt}-thumb.jpg`; // or .png
+          const thumbBase = nameWithoutExt.toLowerCase();
+          let thumbUrl = `${currentPath}${thumbBase}-thumb.png`;
 
           const card = document.createElement('a');
-          card.href = file.name; // relative: MFS-Gaussian.html
+          card.href = file.name;
           card.className = 'card';
-          card.target = '_blank'; // new tab (remove if same tab preferred)
+          card.target = '_blank';
 
-          // Thumbnail or placeholder
-          const img = new Image();
+          const img = document.createElement('img');
           img.src = thumbUrl;
           img.alt = nameWithoutExt;
           img.className = 'thumbnail';
           img.loading = 'lazy';
 
           img.onerror = () => {
-            // Fallback placeholder if thumb missing
             const placeholder = document.createElement('div');
             placeholder.className = 'placeholder';
             placeholder.textContent = 'No Preview';
-            card.querySelector('.thumb-container')?.replaceChild(placeholder, img);
+            const container = card.querySelector('.thumb-container') || card.firstElementChild;
+            if (container) {
+              container.innerHTML = '';
+              container.appendChild(placeholder);
+            }
           };
 
           card.innerHTML = `
@@ -178,12 +186,11 @@
         });
 
       } catch (err) {
-        console.error(err);
-        gallery.innerHTML = `<p style="color: #ff6666;">Error loading models: ${err.message}<br>Please try refreshing.</p>`;
+        console.error('Script error:', err);
+        gallery.innerHTML = `<p class="error-msg">Error loading models: ${err.message}<br>Please try refreshing or check console.</p>`;
       }
     })();
   </script>
 
 </body>
-
 </html>
