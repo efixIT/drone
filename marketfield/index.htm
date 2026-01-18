@@ -86,7 +86,7 @@
   </div>
 
   <footer>
-    © eFixit Support • Brightlingsea, England • January 2026 • 
+    © eFixit Support • Elmstead Market, England • January 2026 • 
     <a href="mailto:hello@efixit.support" style="color: #00bfff;">Contact us</a>
   </footer>
 
@@ -109,7 +109,7 @@
         .replace(/\/$/, '')                // remove trailing slash
         .split('/').filter(p => p).join('/'); // clean
 
-      if (currentPath) currentPath += '/'; // e.g. "MFS/"
+      if (currentPath) currentPath += '/'; // e.g. "marketfield/"
       // Root folder → currentPath = ''
 
       const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${currentPath}?ref=${branch}`;
@@ -143,8 +143,8 @@
 
         htmlFiles.forEach(file => {
           const nameWithoutExt = file.name.replace(/\.html$/i, '');
-          // Predict thumbnail: same name + -thumb.jpg in same folder
-          const thumbUrl = `${currentPath}${nameWithoutExt}-thumb.jpg`; // or .png
+          // Predict thumbnail: same name + -thumb.png (changed from .jpg)
+          let thumbUrl = `${currentPath}${nameWithoutExt}-thumb.png`; // primary: .png
 
           const card = document.createElement('a');
           card.href = file.name; // relative: MFS-Gaussian.html
@@ -159,11 +159,16 @@
           img.loading = 'lazy';
 
           img.onerror = () => {
-            // Fallback placeholder if thumb missing
-            const placeholder = document.createElement('div');
-            placeholder.className = 'placeholder';
-            placeholder.textContent = 'No Preview';
-            card.querySelector('.thumb-container')?.replaceChild(placeholder, img);
+            // Try .jpg as fallback
+            thumbUrl = `${currentPath}${nameWithoutExt}-thumb.jpg`;
+            img.src = thumbUrl;
+            img.onerror = () => {
+              // Final fallback: placeholder if both fail
+              const placeholder = document.createElement('div');
+              placeholder.className = 'placeholder';
+              placeholder.textContent = 'No Preview';
+              card.querySelector('.thumb-container')?.replaceChild(placeholder, img);
+            };
           };
 
           card.innerHTML = `
@@ -186,4 +191,3 @@
 
 </body>
 </html>
-
