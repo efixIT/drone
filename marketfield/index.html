@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>eFixit Support – Market Field School Models</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #0a2540; color: #fff; margin: 0; padding: 20px; text-align: center; }
+    h1 { color: #00bfff; margin-bottom: 40px; }
+    #gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 25px; max-width: 1200px; margin: 0 auto; }
+    .card { background: #1a3a5e; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.4); transition: all 0.25s; text-decoration: none; color: inherit; }
+    .card:hover { transform: translateY(-8px); box-shadow: 0 12px 30px rgba(0,191,255,0.4); }
+    .thumbnail { width: 100%; height: 160px; object-fit: cover; background: #000; }
+    .placeholder { height: 160px; background: #333; display: flex; align-items: center; justify-content: center; font-size: 1.2em; color: #888; }
+    .info { padding: 12px; }
+    .title { font-size: 1.1em; margin: 8px 0; }
+    .desc { font-size: 0.85em; opacity: 0.8; }
+    footer { margin-top: 60px; opacity: 0.7; font-size: 0.9em; }
+    .error { color: #ff6666; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>Market Field School – 3D Models</h1>
+  
+  <div id="gallery">
+    <p>Loading models...</p>
+  </div>
+
+  <footer>
+    © eFixit Support • Elmstead Market, England • January 2026 • 
+    <a href="mailto:hello@efixit.support" style="color:#00bfff;">Contact us</a>
+  </footer>
+
+  <script>
+    const gallery = document.getElementById('gallery');
+    if (!gallery) {
+      document.body.innerHTML += '<p class="error">Critical: Gallery container missing – check HTML structure.</p>';
+      throw new Error('Gallery div not found');
+    }
+    gallery.innerHTML = '<p>Loading models...</p>';
+
+    (async () => {
+      try {
+        let path = window.location.pathname.replace(/\/index\.html?$/, '').replace(/\/$/, '');
+        if (path) path += '/';
+        const api = `https://api.github.com/repos/efixIT/drone/contents/${path}?ref=main`;
+        const res = await fetch(api, { headers: { 'Accept': 'application/vnd.github+json' } });
+        if (!res.ok) throw new Error('API failed: ' + res.status);
+        const files = await res.json();
+        const htmls = files.filter(f => f.type === 'file' && f.name.toLowerCase().endsWith('.html') && !f.name.toLowerCase().includes('index'));
+        if (htmls.length === 0) {
+          gallery.innerHTML = '<p>No models found yet.</p>';
+          return;
+        }
+        gallery.innerHTML = '';
+        htmls.forEach(f => {
+          const base = f.name.replace(/\.html$/i, '').toLowerCase();
+          const thumb = `${path}${base}-thumb.png`;
+          const card = document.createElement('a');
+          card.href = f.name;
+          card.className = 'card';
+          card.target = '_blank';
+          const img = new Image();
+          img.src = thumb;
+          img.className = 'thumbnail';
+          img.loading = 'lazy';
+          img.onerror = () => {
+            const ph = document.createElement('div');
+            ph.className = 'placeholder';
+            ph.textContent = 'No Preview';
+            card.firstChild.innerHTML = '';
+            card.firstChild.appendChild(ph);
+          };
+          card.innerHTML = `<div>${img.outerHTML}</div><div class="info"><div class="title">${base.replace(/-/g, ' ')}</div><div class="desc">Gaussian splat model • Click to inspect</div></div>`;
+          gallery.appendChild(card);
+        });
+      } catch (e) {
+        gallery.innerHTML = `<p class="error">Error: ${e.message}</p>`;
+        console.error(e);
+      }
+    })();
+  </script>
+</body>
+</html>
