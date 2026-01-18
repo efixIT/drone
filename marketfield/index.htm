@@ -1,193 +1,88 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>eFixit Support – Gaussian Splat Models</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #0a2540;
-      color: #fff;
-      margin: 0;
-      padding: 20px 10px;
-      text-align: center;
-    }
-    h1 {
-      color: #00bfff;
-      margin: 20px 0 40px;
-    }
-    .gallery {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 25px;
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-    .card {
-      background: #1a3a5e;
-      border-radius: 12px;
-      overflow: hidden;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.4);
-      transition: transform 0.25s, box-shadow 0.25s;
-      text-decoration: none;
-      color: inherit;
-      display: flex;
-      flex-direction: column;
-    }
-    .card:hover {
-      transform: translateY(-8px);
-      box-shadow: 0 12px 30px rgba(0,191,255,0.4);
-    }
-    .thumbnail {
-      width: 100%;
-      height: 160px;
-      object-fit: cover;
-      background: #000;
-    }
-    .placeholder {
-      height: 160px;
-      background: #333;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.2em;
-      color: #888;
-    }
-    .info {
-      padding: 12px;
-      flex-grow: 1;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-    }
-    .title {
-      font-size: 1.1em;
-      margin: 8px 0 4px;
-    }
-    .desc {
-      font-size: 0.85em;
-      opacity: 0.8;
-      margin-top: auto;
-    }
-    footer {
-      margin-top: 60px;
-      opacity: 0.7;
-      font-size: 0.9em;
-    }
-  </style>
-</head>
-<body>
+<script>
+  (async function() {
+    const gallery = document.getElementById('gallery');
+    gallery.innerHTML = ''; // clear loading
 
-  <h1>Market Field School – 3D Models</h1>
-  
-  <div class="gallery" id="gallery">
-    <p>Loading models...</p>
-  </div>
+    const owner = 'efixIT';
+    const repo = 'drone';
+    const branch = 'main';
 
-  <footer>
-    © eFixit Support • Elmstead Market, England • January 2026 • 
-    <a href="mailto:hello@efixit.support" style="color: #00bfff;">Contact us</a>
-  </footer>
+    let currentPath = window.location.pathname
+      .replace(/\/index\.htm?$/, '')  // handle both .html and .htm
+      .replace(/\/$/, '')
+      .split('/').filter(p => p).join('/');
 
-  <script>
-    (async function() {
-      const gallery = document.getElementById('gallery');
-      gallery.innerHTML = ''; // clear loading text
+    if (currentPath) currentPath += '/';
 
-      // === CONFIG ===
-      const owner = 'efixIT';
-      const repo = 'drone';
-      const branch = 'main'; // change if using master or other
-      // Optional: personal access token for higher rate limits (classic token, read:contents scope)
-      // const token = 'ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx';
-      // If using token: add to headers below → 'Authorization': `Bearer ${token}`,
+    const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${currentPath}?ref=${branch}`;
 
-      // Get current folder path from URL (works when index.html is in /MFS/, /Another/, etc.)
-      let currentPath = window.location.pathname
-        .replace(/\/index\.html$/, '')     // remove index.html
-        .replace(/\/$/, '')                // remove trailing slash
-        .split('/').filter(p => p).join('/'); // clean
-
-      if (currentPath) currentPath += '/'; // e.g. "marketfield/"
-      // Root folder → currentPath = ''
-
-      const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${currentPath}?ref=${branch}`;
-
-      try {
-        const response = await fetch(apiUrl, {
-          headers: {
-            'Accept': 'application/vnd.github+json',
-            'X-GitHub-Api-Version': '2022-11-28',
-            // 'Authorization': `Bearer ${token}`, // uncomment & add token if needed
-          }
-        });
-
-        if (!response.ok) {
-          throw new Error(`GitHub API error: ${response.status} ${response.statusText}`);
+    try {
+      const response = await fetch(apiUrl, {
+        headers: {
+          'Accept': 'application/vnd.github+json',
+          'X-GitHub-Api-Version': '2022-11-28',
         }
+      });
 
-        const items = await response.json();
+      if (!response.ok) throw new Error(`API error: ${response.status}`);
 
-        // Filter only .html files (ignore index.html itself, dirs, other files)
-        const htmlFiles = items.filter(item => 
-          item.type === 'file' && 
-          item.name.toLowerCase().endsWith('.html') &&
-          item.name.toLowerCase() !== 'index.html'
-        );
+      const items = await response.json();
 
-        if (htmlFiles.length === 0) {
-          gallery.innerHTML = '<p>No model pages found in this folder yet.</p>';
-          return;
-        }
+      const htmlFiles = items.filter(item => 
+        item.type === 'file' && 
+        item.name.toLowerCase().endsWith('.html') &&
+        item.name.toLowerCase() !== 'index.html' &&
+        item.name.toLowerCase() !== 'index.htm'
+      );
 
-        htmlFiles.forEach(file => {
-          const nameWithoutExt = file.name.replace(/\.html$/i, '');
-          // Predict thumbnail: same name + -thumb.png (changed from .jpg)
-          let thumbUrl = `${currentPath}${nameWithoutExt}-thumb.png`; // primary: .png
-
-          const card = document.createElement('a');
-          card.href = file.name; // relative: MFS-Gaussian.html
-          card.className = 'card';
-          card.target = '_blank'; // new tab (remove if same tab preferred)
-
-          // Thumbnail or placeholder
-          const img = new Image();
-          img.src = thumbUrl;
-          img.alt = nameWithoutExt;
-          img.className = 'thumbnail';
-          img.loading = 'lazy';
-
-          img.onerror = () => {
-            // Try .jpg as fallback
-            thumbUrl = `${currentPath}${nameWithoutExt}-thumb.jpg`;
-            img.src = thumbUrl;
-            img.onerror = () => {
-              // Final fallback: placeholder if both fail
-              const placeholder = document.createElement('div');
-              placeholder.className = 'placeholder';
-              placeholder.textContent = 'No Preview';
-              card.querySelector('.thumb-container')?.replaceChild(placeholder, img);
-            };
-          };
-
-          card.innerHTML = `
-            <div class="thumb-container">${img.outerHTML}</div>
-            <div class="info">
-              <div class="title">${nameWithoutExt.replace(/-/g, ' ')}</div>
-              <div class="desc">Gaussian splat model • Click to view & inspect</div>
-            </div>
-          `;
-
-          gallery.appendChild(card);
-        });
-
-      } catch (err) {
-        console.error(err);
-        gallery.innerHTML = `<p style="color: #ff6666;">Error loading models: ${err.message}<br>Please try refreshing.</p>`;
+      if (htmlFiles.length === 0) {
+        gallery.innerHTML = '<p>No model pages found yet.</p>';
+        return;
       }
-    })();
-  </script>
 
-</body>
-</html>
+      htmlFiles.forEach(file => {
+        let nameWithoutExt = file.name.replace(/\.html$/i, '');
+        // Force lowercase for thumb matching (GitHub case-sensitive)
+        const thumbBase = nameWithoutExt.toLowerCase();
+        let thumbUrl = `${currentPath}${thumbBase}-thumb.png`;
+
+        const card = document.createElement('a');
+        card.href = file.name;
+        card.className = 'card';
+        card.target = '_blank';
+
+        const img = document.createElement('img');
+        img.src = thumbUrl;
+        img.alt = nameWithoutExt;
+        img.className = 'thumbnail';
+        img.loading = 'lazy';
+
+        // Better onerror: replace img with placeholder div
+        img.onerror = function() {
+          const placeholder = document.createElement('div');
+          placeholder.className = 'placeholder';
+          placeholder.textContent = 'No Preview';
+          const container = card.querySelector('.thumb-container');
+          if (container) {
+            container.innerHTML = '';
+            container.appendChild(placeholder);
+          }
+        };
+
+        card.innerHTML = `
+          <div class="thumb-container">${img.outerHTML}</div>
+          <div class="info">
+            <div class="title">${nameWithoutExt.replace(/-/g, ' ')}</div>
+            <div class="desc">Gaussian splat model • Click to view & inspect</div>
+          </div>
+        `;
+
+        gallery.appendChild(card);
+      });
+
+    } catch (err) {
+      console.error(err);
+      gallery.innerHTML = `<p style="color: #ff6666;">Error: ${err.message}</p>`;
+    }
+  })();
+</script>
