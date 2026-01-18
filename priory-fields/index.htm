@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>eFixit Support – Market Field School Models</title>
+  <title>eFixit Support – Priory Fields Development</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -75,10 +75,6 @@
       opacity: 0.7;
       font-size: 0.9em;
     }
-    .error-msg {
-      color: #ff6666;
-      font-weight: bold;
-    }
   </style>
 </head>
 <body>
@@ -90,105 +86,83 @@
   </div>
 
   <footer>
-    © eFixit Support • Elmstead Market, England • January 2026 • 
+    © eFixit Support • Brightlingsea, England • January 2026 • 
     <a href="mailto:hello@efixit.support" style="color: #00bfff;">Contact us</a>
   </footer>
 
   <script>
-    (async function() {
+    (function() {
       const gallery = document.getElementById('gallery');
       
       if (!gallery) {
-        document.body.innerHTML += '<p class="error-msg">Critical error: Gallery container missing.</p>';
+        document.body.innerHTML += '<p style="color:#ff6666; font-weight:bold;">Error: Gallery container missing – check HTML structure.</p>';
         return;
       }
 
-      gallery.innerHTML = '<p>Loading models...</p>';
+      gallery.innerHTML = ''; // clear "Loading models..."
 
-      const owner = 'efixIT';
-      const repo = 'drone';
-      const branch = 'main';
-      const token = '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';  // ← your token is here
+      // === MANUAL MODEL LIST ===
+      // Add new entries here when you upload a new .html + -thumb.png pair
+      const models = [
+        {
+          file: 'priory-fields.html',
+          title: 'Priory Fields Jan 2026',
+          thumb: 'priory-fields-thumb.png'
+        },
 
-      let currentPath = window.location.pathname
-        .replace(/\/index\.html?$/, '')
-        .replace(/\/index\.htm?$/, '')
-        .replace(/\/$/, '');
+        // PLACEHOLDER SLOT 1 – copy-paste and fill in when ready
+        // {
+        //   file: 'your-new-model.html',
+        //   title: 'New Model Name',
+        //   thumb: 'your-new-model-thumb.png'
+        // },
 
-      if (currentPath) currentPath += '/';
+        // PLACEHOLDER SLOT 2 – copy-paste and fill in when ready
+        // {
+        //   file: 'another-model.html',
+        //   title: 'Another Model',
+        //   thumb: 'another-model-thumb.png'
+        // }
+      ];
 
-      const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${currentPath}?ref=${branch}`;
-
-      try {
-        const response = await fetch(apiUrl, {
-          headers: {
-            'Accept': 'application/vnd.github+json',
-            'Authorization': `Bearer ${token}`,
-            'User-Agent': 'eFixitSupport-Gallery/1.0[](https://efixit.support)'
-          }
-        });
-
-        if (!response.ok) {
-          throw new Error(`GitHub API failed: ${response.status} ${response.statusText}`);
-        }
-
-        const items = await response.json();
-
-        const htmlFiles = items.filter(item => 
-          item.type === 'file' && 
-          item.name.toLowerCase().endsWith('.html') &&
-          !item.name.toLowerCase().includes('index')
-        );
-
-        if (htmlFiles.length === 0) {
-          gallery.innerHTML = '<p>No model pages found in this folder yet.</p>';
-          return;
-        }
-
-        gallery.innerHTML = '';
-
-        htmlFiles.forEach(file => {
-          const nameWithoutExt = file.name.replace(/\.html$/i, '');
-          const thumbBase = nameWithoutExt.toLowerCase();
-          let thumbUrl = `${currentPath}${thumbBase}-thumb.png`;
-
-          const card = document.createElement('a');
-          card.href = file.name;
-          card.className = 'card';
-          card.target = '_blank';
-
-          const img = document.createElement('img');
-          img.src = thumbUrl;
-          img.alt = nameWithoutExt;
-          img.className = 'thumbnail';
-          img.loading = 'lazy';
-
-          img.onerror = () => {
-            const placeholder = document.createElement('div');
-            placeholder.className = 'placeholder';
-            placeholder.textContent = 'No Preview';
-            const container = card.querySelector('.thumb-container') || card.firstElementChild;
-            if (container) {
-              container.innerHTML = '';
-              container.appendChild(placeholder);
-            }
-          };
-
-          card.innerHTML = `
-            <div class="thumb-container">${img.outerHTML}</div>
-            <div class="info">
-              <div class="title">${nameWithoutExt.replace(/-/g, ' ')}</div>
-              <div class="desc">Gaussian splat model • Click to view & inspect</div>
-            </div>
-          `;
-
-          gallery.appendChild(card);
-        });
-
-      } catch (err) {
-        console.error('Script error:', err);
-        gallery.innerHTML = `<p class="error-msg">Error loading models: ${err.message}<br>Please try refreshing or check console.</p>`;
+      if (models.length === 0) {
+        gallery.innerHTML = '<p>No models added yet. Add entries to the models array in the script.</p>';
+        return;
       }
+
+      models.forEach(model => {
+        const card = document.createElement('a');
+        card.href = model.file;
+        card.className = 'card';
+        card.target = '_blank'; // opens in new tab – remove this line if you prefer same tab
+
+        const img = new Image();
+        img.src = model.thumb;
+        img.alt = model.title;
+        img.className = 'thumbnail';
+        img.loading = 'lazy';
+
+        img.onerror = () => {
+          const placeholder = document.createElement('div');
+          placeholder.className = 'placeholder';
+          placeholder.textContent = 'No Preview';
+          const container = card.querySelector('.thumb-container');
+          if (container) {
+            container.innerHTML = '';
+            container.appendChild(placeholder);
+          }
+        };
+
+        card.innerHTML = `
+          <div class="thumb-container">${img.outerHTML}</div>
+          <div class="info">
+            <div class="title">${model.title}</div>
+            <div class="desc">Gaussian splat model • Click to view & inspect</div>
+          </div>
+        `;
+
+        gallery.appendChild(card);
+      });
     })();
   </script>
 
