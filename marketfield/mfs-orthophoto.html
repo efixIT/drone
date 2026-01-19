@@ -3,67 +3,72 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>MFS Orthophoto Viewer</title>
+  <title>MFS Orthophoto - Elmstead Market</title>
   
-  <!-- Leaflet CSS & JS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" 
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5n/NYZbCw=" crossorigin=""/>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" 
           integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   
-  <!-- georaster (parser) & georaster-layer-for-leaflet -->
   <script src="https://unpkg.com/georaster@latest"></script>
   <script src="https://unpkg.com/georaster-layer-for-leaflet@4.1.2/dist/georaster-layer-for-leaflet.min.js"></script>
 
   <style>
-    body { margin: 0; padding: 0; }
-    #map { height: 100vh; width: 100vw; }
+    body { margin: 0; padding: 0; font-family: Arial, sans-serif; }
+    #map { height: 100vh; width: 100vw; position: relative; }
+    #status { position: absolute; top: 20px; left: 20px; z-index: 1000; background: rgba(255,255,255,0.9); padding: 15px; border: 2px solid #333; border-radius: 8px; max-width: 400px; box-shadow: 0 4px 15px rgba(0,0,0,0.4); }
+    #status.error { background: #ffebee; border-color: #c62828; }
   </style>
 </head>
 <body>
-  <div id="map"></div>
+  <div id="map">
+    <div id="status">Loading Elmstead Market orthophoto... Please wait (large files can take 10–60s).<br><br>Check browser console (F12) for errors.</div>
+  </div>
 
   <script>
-    // Initialize the Leaflet map
-    const map = L.map('map').setView([54.0, -1.5], 10);  // ← Change to approximate center of your site (lat, lon), e.g. Baildon area
+    // Center on Elmstead Market, Essex (approx lat 51.881, lon 0.995)
+    const map = L.map('map').setView([51.881, 0.995], 16);  // Zoom 16 = village detail; change to 17 for closer
 
-    // Add OpenStreetMap base layer
+    // OSM base layer
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
       maxZoom: 19
     }).addTo(map);
 
-    // URL to your orthophoto (change this!)
-    const url_to_geotiff = "mfs-orthophoto.tif";   // or "https://yourdomain.com/path/mfs-orthophoto_cog.tif"
+    // CHANGE THIS to your actual file path/URL
+    const url_to_geotiff = "mfs-orthophoto.tif";  // Or: "https://efixit.support/marketfield/mfs-orthophoto.tif"
 
-    fetch(url_to_geotiff)
+    const statusDiv = document.getElementById('status');
+
+    fetch(url_to_geotiff, { mode: 'cors' })  // Explicit CORS mode
       .then(response => {
-        if (!response.ok) throw new Error("Failed to fetch TIFF – check URL, CORS, file existence");
+        if (!response.ok) throw new Error(`Fetch failed: ${response.status} ${response.statusText}. File missing? Wrong URL?`);
         return response.arrayBuffer();
       })
       .then(arrayBuffer => {
         parseGeoraster(arrayBuffer).then(georaster => {
-          console.log("GeoRaster loaded:", georaster);
+          console.log("Success! GeoRaster parsed:", georaster);
+          statusDiv.innerHTML = "Orthophoto loaded successfully.<br>Zoom/pan to explore Elmstead Market area.";
+          statusDiv.classList.remove('error');
 
           const layer = new GeoRasterLayer({
             georaster: georaster,
-            opacity: 0.85,               // Adjust 0–1
-            resolution: 128,             // Higher = faster but less detail; try 64–256
-            // pixelValuesToColorFn: values => { ... }  // optional: custom coloring if RGB/multiband
+            opacity: 0.9,
+            resolution: 96,  // Tune: lower = sharper/slower
           });
 
           layer.addTo(map);
-          
-          // Auto-zoom to the orthophoto bounds
-          map.fitBounds(layer.getBounds());
+          map.fitBounds(layer.getBounds(), { padding: [50, 50] });  // Auto-zoom to ortho bounds
         }).catch(err => {
-          console.error("Error parsing GeoRaster:", err);
-          alert("Failed to parse the TIFF file. Ensure it's a valid GeoTIFF and served with CORS if remote.");
+          console.error("Parse error:", err);
+          statusDiv.innerHTML = "TIFF parsed but failed to render.<br>Likely: Invalid GeoTIFF, wrong CRS, or file corruption.<br>Run 'gdalinfo mfs-orthophoto.tif' to check.";
+          statusDiv.classList.add('error');
         });
       })
       .catch(err => {
-        console.error("Fetch error:", err);
-        alert("Could not load the file from: " + url_to_geotiff + "\n\nPossible issues: wrong path/URL, server not allowing CORS, or file too large.");
+        console.error("Full fetch/parse error:", err);
+        statusDiv.innerHTML = `Could not load: ${url_to_geotiff}<br><strong>Error:</strong> ${err.message}<br><br>Fixes to try:<ul><li>File in same folder as HTML?</li><li>If remote URL: Open it directly in new tab (downloads? 403?)</li><li>Server CORS? Add Access-Control-Allow-Origin: *</li><li>Convert to COG: gdal_translate -of COG input.tif output_cog.tif</li><li>Use full URL in code</li></ul>`;
+        statusDiv.classList.add('error');
       });
   </script>
 </body>
