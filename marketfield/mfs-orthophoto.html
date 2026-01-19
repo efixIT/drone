@@ -57,29 +57,28 @@
     maxNativeZoom: 19
   }).addTo(map);
 
-  // ← Updated filename (change only this line if the name is slightly different)
-  const url = "mfs-orthophoto_cog_webp.tif";
+  // ← Updated to your Google Drive direct download link
+  const url = "https://drive.google.com/uc?export=download&id=1jIY_mX2Jrxb-WinBFTIiYOwthIGowfKi";
 
   const status = document.getElementById('status');
 
   fetch(url)
     .then(r => {
-      if (!r.ok) throw new Error(`Fetch failed: ${r.status} — check filename or GitHub Pages sync`);
+      if (!r.ok) throw new Error(`Fetch failed: ${r.status}`);
       return r.arrayBuffer();
     })
     .then(ab => parseGeoraster(ab))
     .then(georaster => {
-      status.textContent = "Lossless COG loaded – fast deep zoom ready";
+      status.textContent = "Lossless COG loaded from Drive – deep zoom ready";
       status.classList.add('loaded');
 
       const layer = new GeoRasterLayer({
         georaster,
         opacity: 0.97,
-        resolution: 512,           // High sharpness at deep zoom (lossless COG handles it well)
-        resampleMethod: "bilinear", // Smooth transitions, no hard pixelation
+        resolution: 512,
+        resampleMethod: "bilinear",
         pixelValuesToColorFn: values => {
           const r = values[0] || 0, g = values[1] || 0, b = values[2] || 0;
-          // Nodata/black tolerance (lossless = exact black is 0,0,0)
           if (r < 10 && g < 10 && b < 10) return [0, 0, 0, 0];
           return [r, g, b, 255];
         }
@@ -87,24 +86,20 @@
 
       layer.addTo(map);
 
-      // Auto-fit to the actual orthophoto bounds
       if (layer.getBounds) {
         map.fitBounds(layer.getBounds(), { padding: [40, 40] });
       }
 
-      // Layer toggle control (top-right)
       L.control.layers({}, { "Orthophoto Overlay": layer }, { position: 'topright' }).addTo(map);
 
-      // Fade out status after 5 seconds
       setTimeout(() => { status.style.opacity = '0'; }, 5000);
     })
     .catch(err => {
       console.error(err);
-      status.innerHTML = `Error: ${err.message}<br>Check console (F12) or direct URL: ${url}`;
+      status.innerHTML = `Error loading COG: ${err.message}<br>Check console (F12) or Drive link`;
       status.style.background = 'rgba(231, 76, 60, 0.92)';
       status.style.color = 'white';
     });
 </script>
-
 </body>
 </html>
