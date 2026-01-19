@@ -24,65 +24,68 @@
   </div>
 
   <script>
-    const map = L.map('map').setView([51.881, 0.995], 17);
+  // Increase map maxZoom to allow deeper levels (e.g., 22+ for 1.5 cm detail)
+  const map = L.map('map', {
+    maxZoom: 22,          // ← Set this higher (try 22–25; no upper limit really)
+    zoomSnap: 0.25,       // Optional: smoother zoom steps for fine control
+    zoomDelta: 0.5        // Optional: smaller zoom increments with mouse wheel
+  }).setView([51.881, 0.995], 17);
 
-    // Satellite basemap: Esri World Imagery (free, no key needed)
-    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-      attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
-      maxZoom: 19
-    }).addTo(map);
+  // Satellite basemap (Esri supports up to ~19–20 natively; will stretch beyond)
+  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
+    maxZoom: 22,          // ← Match or exceed map's maxZoom
+    maxNativeZoom: 19     // ← Prevents requesting non-existent high-res tiles from Esri (stretches level 19 instead)
+  }).addTo(map);
 
-    const url = "mfs-orthophoto.tif";
-    const status = document.getElementById('status');
+  // Your orthophoto fetch & layer (unchanged except resolution bump)
+  const url = "mfs-orthophoto_cog.tif";  // Use COG for best high-zoom perf
+  const status = document.getElementById('status');
 
-    fetch(url)
-      .then(r => {
-        if (!r.ok) throw new Error(`Fetch failed: ${r.status}`);
-        return r.arrayBuffer();
-      })
-      .then(ab => parseGeoraster(ab))
-      .then(georaster => {
-        console.log("GeoRaster details:", georaster);
-        console.log("Bands:", georaster.numberOfRasters);
+  fetch(url)
+    .then(r => {
+      if (!r.ok) throw new Error(`Fetch failed: ${r.status}`);
+      return r.arrayBuffer();
+    })
+    .then(ab => parseGeoraster(ab))
+    .then(georaster => {
+      console.log("GeoRaster details:", georaster);
+      console.log("Bands:", georaster.numberOfRasters);
 
-        status.innerHTML = "Orthophoto loaded on satellite basemap!<br>Use top-right toggle to show/hide ortho.<br>Zoom in for full detail.";
-        status.className = 'success';
+      status.innerHTML = "Orthophoto loaded! Zoom deeper (up to 22+) for 1.5 cm detail.<br>Use top-right toggle to show/hide ortho.";
+      status.className = 'success';
 
-        const layer = new GeoRasterLayer({
-          georaster,
-          opacity: 0.9,
-          resolution: 256,
-          // Make black/nodata pixels transparent (adjust threshold if black isn't exactly [0,0,0])
-          pixelValuesToColorFn: values => {
-            const r = values[0] || 0;
-            const g = values[1] || 0;
-            const b = values[2] || 0;
-            // If pixel is very dark/black (nodata), return transparent
-            if (r < 10 && g < 10 && b < 10) {
-              return [0, 0, 0, 0];  // rgba(0,0,0,0) = fully transparent
-            }
-            // Otherwise return the original RGB with full opacity
-            return [r, g, b, 255];
+      const layer = new GeoRasterLayer({
+        georaster,
+        opacity: 0.9,
+        resolution: 384,  // ← Higher than before (256–512 range); sharper at deep zoom but slower
+        pixelValuesToColorFn: values => {
+          const r = values[0] || 0;
+          const g = values[1] || 0;
+          const b = values[2] || 0;
+          if (r < 10 && g < 10 && b < 10) {
+            return [0, 0, 0, 0];
           }
-        });
-
-        layer.addTo(map);
-
-        // Auto-fit to ortho bounds if possible, else fallback
-        try {
-          map.fitBounds(layer.getBounds());
-        } catch (e) {
-          console.warn("Bounds fit failed, staying at current view");
+          return [r, g, b, 255];
         }
-
-        // Layer control: toggle ortho visibility (useful for comparing to satellite)
-        L.control.layers({}, { "MFS Orthophoto Overlay": layer }, { position: 'topright' }).addTo(map);
-      })
-      .catch(err => {
-        console.error("Error:", err);
-        status.innerHTML = `Failed: ${err.message}<br>Check console (F12).`;
-        status.className = 'error';
       });
-  </script>
+
+      layer.addTo(map);
+
+      // Optional: Auto-fit or manual deep zoom hint
+      try {
+        map.fitBounds(layer.getBounds());
+      } catch (e) {
+        console.warn("Bounds fit failed");
+      }
+
+      L.control.layers({}, { "MFS Orthophoto Overlay": layer }, { position: 'topright' }).addTo(map);
+    })
+    .catch(err => {
+      console.error("Error:", err);
+      status.innerHTML = `Failed: ${err.message}<br>Check console (F12).`;
+      status.className = 'error';
+    });
+</script>
 </body>
 </html>
