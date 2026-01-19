@@ -48,18 +48,16 @@
     maxZoom: 24,
     zoomSnap: 0.1,
     zoomDelta: 0.4
-  }).setView([51.8810, 0.9945], 18);  // Centered on Market Field School
+  }).setView([51.8810, 0.9945], 18);
 
-  // Esri World Imagery (satellite/aerial)
   L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
     attribution: '',
     maxZoom: 24,
     maxNativeZoom: 19
   }).addTo(map);
 
-  // ← Updated to your Google Drive direct download link
   const url = "https://zenodo.org/records/18299508/files/mfs-orthophoto_cog_deflate.tif?download=1";
-    
+
   const status = document.getElementById('status');
 
   fetch(url)
@@ -69,7 +67,7 @@
     })
     .then(ab => parseGeoraster(ab))
     .then(georaster => {
-      status.textContent = "Lossless COG loaded from Drive – deep zoom ready";
+      status.textContent = "Lossless COG loaded from Zenodo – deep zoom ready";
       status.classList.add('loaded');
 
       const layer = new GeoRasterLayer({
@@ -96,7 +94,7 @@
     })
     .catch(err => {
       console.error(err);
-      status.innerHTML = `Error loading COG: ${err.message}<br>Check console (F12) or Drive link`;
+      status.innerHTML = `Error: ${err.message}<br>Check console (F12)`;
       status.style.background = 'rgba(231, 76, 60, 0.92)';
       status.style.color = 'white';
     });
