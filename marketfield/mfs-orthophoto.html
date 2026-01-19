@@ -91,36 +91,36 @@
 
   <header>
     <h1>Market Field School – Elmstead Market</h1>
-    <p>Interactive Orthophoto View</p>
+    <p>Interactive Orthophoto View (COG – 1.5 cm/pixel)</p>
   </header>
 
   <div class="container">
     <div class="map-wrapper">
       <div id="map"></div>
-      <div id="status">Loading high-resolution orthophoto…</div>
+      <div id="status">Loading Cloud-Optimized orthophoto…</div>
     </div>
   </div>
 
   <footer>
-    <p>Orthophoto processed by <strong>eFix Drone Services</strong> <br>
+    <p>Orthophoto processed by <strong>eFix Drone Services</strong> (OpenDroneMap + COG)<br>
     Satellite base © Esri | Contact: <a href="mailto:hello@efixit.support">hello@efixit.support</a></p>
   </footer>
 
   <script>
     const map = L.map('map', {
-      maxZoom: 23,
+      maxZoom: 24,              // Higher max zoom now possible with COG
       zoomSnap: 0.1,
       zoomDelta: 0.4
-    }).setView([51.8810, 0.9945], 18);
+    }).setView([51.8810, 0.9945], 18);  // Centered on Market Field School
 
-    // Esri World Imagery (satellite / aerial)
+    // Esri World Imagery
     L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
       attribution: '',
-      maxZoom: 23,
+      maxZoom: 24,
       maxNativeZoom: 19
     }).addTo(map);
 
-    const url = "mfs-orthophoto_cog_jpeg.tif";  // ← change if filename is different
+    const url = "mfs-orthophoto_cog_jpeg.tif";  // ← updated to your new COG file
 
     const status = document.getElementById('status');
 
@@ -131,36 +131,37 @@
       })
       .then(ab => parseGeoraster(ab))
       .then(georaster => {
-        status.textContent = "Orthophoto loaded – zoom in for detail";
+        status.textContent = "COG orthophoto loaded – fast deep zoom ready";
         status.classList.add('loaded');
 
         const layer = new GeoRasterLayer({
           georaster,
-          opacity: 0.92,
-          resolution: 384,
+          opacity: 0.95,
+          resolution: 512,           // Higher value = sharper at deep zoom (COG makes this fast)
           pixelValuesToColorFn: values => {
             const r = values[0] || 0, g = values[1] || 0, b = values[2] || 0;
-            if (r < 10 && g < 10 && b < 10) return [0, 0, 0, 0];
+            // JPEG compression can make black slightly off 0,0,0 → wider tolerance
+            if (r < 15 && g < 15 && b < 15) return [0, 0, 0, 0];
             return [r, g, b, 255];
           }
         });
 
         layer.addTo(map);
 
-        // Fit to orthophoto bounds with some padding
+        // Fit to actual orthophoto bounds (best for showing full coverage)
         if (layer.getBounds) {
           map.fitBounds(layer.getBounds(), { padding: [40, 40] });
         }
 
-        // Toggle control in top-right corner
-        L.control.layers({}, { "Orthophoto": layer }, { position: 'topright' }).addTo(map);
+        // Layer toggle control
+        L.control.layers({}, { "Orthophoto Overlay": layer }, { position: 'topright' }).addTo(map);
 
-        // Fade out status message after a few seconds
+        // Auto-hide status
         setTimeout(() => { status.style.opacity = '0'; }, 4500);
       })
       .catch(err => {
         console.error(err);
-        status.innerHTML = `Error: ${err.message}<br>Check console (F12)`;
+        status.innerHTML = `Error: ${err.message}<br>Check filename or console (F12)`;
         status.style.background = 'rgba(231, 76, 60, 0.92)';
         status.style.color = 'white';
       });
