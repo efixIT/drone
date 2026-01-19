@@ -51,7 +51,7 @@
         const layer = new GeoRasterLayer({
           georaster,
           opacity: 0.9,
-          resolution: 96,
+          resolution: 256,
           // Make black/nodata pixels transparent (adjust threshold if black isn't exactly [0,0,0])
           pixelValuesToColorFn: values => {
             const r = values[0] || 0;
