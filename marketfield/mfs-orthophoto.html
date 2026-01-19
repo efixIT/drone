@@ -3,88 +3,125 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Market Field School – Orthophoto View</title>
+  <title>Market Field School – Orthophoto View (Elmstead Market)</title>
   
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
-  
   <script src="https://unpkg.com/georaster@latest"></script>
   <script src="https://unpkg.com/georaster-layer-for-leaflet@latest/dist/georaster-layer-for-leaflet.min.js"></script>
 
   <style>
-    html, body {
+    body {
       margin: 0;
       padding: 0;
-      height: 100%;
-      background: #f8f9fa; /* light gray background like many viewer pages */
-      font-family: Arial, sans-serif;
+      font-family: Arial, Helvetica, sans-serif;
+      background-color: #f8f9fa;
+      color: #333;
       display: flex;
-      justify-content: center;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    header {
+      background-color: #2c3e50;
+      color: white;
+      text-align: center;
+      padding: 1.5rem;
+    }
+    h1 {
+      margin: 0;
+      font-size: 2rem;
+    }
+    .container {
+      flex: 1;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
       align-items: center;
     }
-    
-    .viewer-window {
-      width: 94vw;                  /* almost full width with margin */
-      max-width: 1600px;            /* cap for large screens */
-      height: 92vh;                 /* almost full height */
-      background: white;
-      border: 1px solid #ccc;       /* light border */
-      border-radius: 8px;           /* rounded corners */
-      box-shadow: 0 6px 24px rgba(0,0,0,0.18); /* soft shadow for "window" effect */
+    .map-wrapper {
+      width: 100%;
+      max-width: 1280px;
+      aspect-ratio: 16 / 9;
+      min-height: 280px;
+      background: #000;
+      border-radius: 8px;
       overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
       position: relative;
     }
-    
     #map {
-      height: 100%;
       width: 100%;
+      height: 100%;
     }
-    
     #status {
       position: absolute;
-      top: 20px;
-      left: 20px;
+      top: 15px;
+      left: 15px;
       z-index: 1000;
-      background: rgba(255,255,255,0.94);
-      padding: 12px 18px;
-      border-radius: 6px;
-      box-shadow: 0 3px 12px rgba(0,0,0,0.25);
+      background: rgba(255,255,255,0.92);
+      color: #333;
+      padding: 8px 14px;
+      border-radius: 4px;
       font-size: 14px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
       pointer-events: none;
-      transition: opacity 0.8s ease;
+      transition: opacity 0.6s ease;
     }
-    
     #status.loaded {
-      opacity: 0.9;
-      background: rgba(240,255,245,0.94);
+      background: rgba(46, 204, 113, 0.92);
+      color: white;
     }
-    
-    #status.error {
-      background: rgba(255,240,240,0.94);
-      border: 1px solid #ffb3b3;
+    footer {
+      text-align: center;
+      padding: 1.5rem;
+      background-color: #2c3e50;
+      color: white;
+      font-size: 0.95rem;
+    }
+    a {
+      color: #3498db;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
     }
   </style>
 </head>
 <body>
-  <div class="viewer-window">
-    <div id="map"></div>
-    <div id="status">Loading orthophoto...</div>
+
+  <header>
+    <h1>Market Field School – Elmstead Market</h1>
+    <p>Interactive Orthophoto View</p>
+  </header>
+
+  <div class="container">
+    <div class="map-wrapper">
+      <div id="map"></div>
+      <div id="status">Loading high-resolution orthophoto…</div>
+    </div>
   </div>
+
+  <footer>
+    <p>Orthophoto processed by <strong>eFix Drone Services</strong> (OpenDroneMap)<br>
+    Satellite base © Esri | Contact: <a href="mailto:hello@efixit.support">hello@efixit.support</a></p>
+  </footer>
 
   <script>
     const map = L.map('map', {
       maxZoom: 23,
       zoomSnap: 0.1,
       zoomDelta: 0.4
-    }).setView([51.881, 0.995], 17);
+    }).setView([51.881, 0.995], 18);
 
+    // Esri World Imagery (satellite / aerial)
     L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-      attribution: 'Tiles © Esri — Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, GIS User Community',
+      attribution: '',
       maxZoom: 23,
       maxNativeZoom: 19
     }).addTo(map);
 
-    const url = "mfs-orthophoto.tif";  // ← confirm exact filename works via direct URL test
+    const url = "mfs-orthophoto.tif";  // ← change if filename is different
+
     const status = document.getElementById('status');
 
     fetch(url)
@@ -94,7 +131,7 @@
       })
       .then(ab => parseGeoraster(ab))
       .then(georaster => {
-        status.innerHTML = "Orthophoto loaded – zoom in for detail";
+        status.textContent = "Orthophoto loaded – zoom in for detail";
         status.classList.add('loaded');
 
         const layer = new GeoRasterLayer({
@@ -103,24 +140,31 @@
           resolution: 384,
           pixelValuesToColorFn: values => {
             const r = values[0] || 0, g = values[1] || 0, b = values[2] || 0;
-            if (r < 8 && g < 8 && b < 8) return [0, 0, 0, 0];
+            if (r < 10 && g < 10 && b < 10) return [0, 0, 0, 0];
             return [r, g, b, 255];
           }
         });
 
         layer.addTo(map);
 
-        if (layer.getBounds) map.fitBounds(layer.getBounds(), { padding: [60, 60] });
+        // Fit to orthophoto bounds with some padding
+        if (layer.getBounds) {
+          map.fitBounds(layer.getBounds(), { padding: [40, 40] });
+        }
 
-        L.control.layers({}, { "Orthophoto Overlay": layer }, { position: 'topright' }).addTo(map);
+        // Toggle control in top-right corner
+        L.control.layers({}, { "Orthophoto": layer }, { position: 'topright' }).addTo(map);
 
+        // Fade out status message after a few seconds
         setTimeout(() => { status.style.opacity = '0'; }, 4500);
       })
       .catch(err => {
         console.error(err);
-        status.innerHTML = `Error: ${err.message}<br>Check file name/path (F12 console for details)`;
-        status.classList.add('error');
+        status.innerHTML = `Error: ${err.message}<br>Check console (F12)`;
+        status.style.background = 'rgba(231, 76, 60, 0.92)';
+        status.style.color = 'white';
       });
   </script>
+
 </body>
 </html>
