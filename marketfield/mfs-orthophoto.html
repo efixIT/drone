@@ -56,7 +56,8 @@
     maxNativeZoom: 19
   }).addTo(map);
 
-  const url = "https://zenodo.org/api/records/18299508/files/mfs-orthophoto_cog_deflate.tif/content";
+  const url = "https://zenodo.org/records/18299508/files/mfs-orthophoto_cog_deflate.tif?download=1";
+
   const status = document.getElementById('status');
 
   fetch(url)
@@ -66,14 +67,14 @@
     })
     .then(ab => parseGeoraster(ab))
     .then(georaster => {
-      status.textContent = "Lossless COG loaded from Zenodo – deep zoom ready";
+      status.textContent = "COG loaded – optimized for smooth zoom";
       status.classList.add('loaded');
 
       const layer = new GeoRasterLayer({
         georaster,
-        opacity: 0.97,
-        resolution: 512,
-        resampleMethod: "bilinear",
+        opacity: 0.95,
+        resolution: 256,           // Lower = much faster & smoother (try 128 if still laggy)
+        resampleMethod: "nearest", // Faster than bilinear, sharp enough for ortho
         pixelValuesToColorFn: values => {
           const r = values[0] || 0, g = values[1] || 0, b = values[2] || 0;
           if (r < 10 && g < 10 && b < 10) return [0, 0, 0, 0];
