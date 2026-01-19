@@ -58,7 +58,7 @@
       const layer = new GeoRasterLayer({
         georaster,
         opacity: 0.9,
-        resolution: 384,  // ← Higher than before (256–512 range); sharper at deep zoom but slower
+        resolution: 512,  // ← Higher than before (256–512 range); sharper at deep zoom but slower
         pixelValuesToColorFn: values => {
           const r = values[0] || 0;
           const g = values[1] || 0;
