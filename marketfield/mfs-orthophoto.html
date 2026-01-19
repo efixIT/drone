@@ -3,9 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>MFS Orthophoto - Elmstead Market</title>
+  <title>MFS Orthophoto - Elmstead Market (Satellite)</title>
   
-  <!-- Use jsDelivr CDN (often more consistent than unpkg) -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
   
@@ -17,18 +16,19 @@
     #map { height: 100vh; width: 100vw; }
     #status { position: absolute; top: 10px; left: 10px; z-index: 1000; background: white; padding: 12px; border: 1px solid #888; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.4); max-width: 400px; }
     #status.success { background: #e8f5e9; border-color: #4caf50; }
-    #status.error { background: #ffebee; border-color: #f44336; }
   </style>
 </head>
 <body>
   <div id="map">
-    <div id="status">Loading... Check console (F12) for progress/errors.</div>
+    <div id="status">Loading satellite basemap + orthophoto...</div>
   </div>
 
   <script>
-    const map = L.map('map').setView([51.881, 0.995], 17); // Higher zoom start for school detail
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    const map = L.map('map').setView([51.881, 0.995], 17);
+
+    // Satellite basemap: Esri World Imagery (free, no key needed)
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+      attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
       maxZoom: 19
     }).addTo(map);
 
@@ -43,38 +43,44 @@
       .then(ab => parseGeoraster(ab))
       .then(georaster => {
         console.log("GeoRaster details:", georaster);
-        console.log("Number of bands:", georaster.numberOfRasters);
-        console.log("Mins/Maxes:", georaster.mins, georaster.maxs);
+        console.log("Bands:", georaster.numberOfRasters);
 
-        status.innerHTML = "Orthophoto loaded & added!<br>Zoom/pan around Market Field School.<br>Toggle layer in top-right if needed.";
+        status.innerHTML = "Orthophoto loaded on satellite basemap!<br>Use top-right toggle to show/hide ortho.<br>Zoom in for full detail.";
         status.className = 'success';
 
         const layer = new GeoRasterLayer({
           georaster,
-          opacity: 0.85,
-          resolution: 128, // Adjust: lower = sharper but slower
-          // Basic coloring fallback if single-band (grayscale ramp)
+          opacity: 0.9,
+          resolution: 96,
+          // Make black/nodata pixels transparent (adjust threshold if black isn't exactly [0,0,0])
           pixelValuesToColorFn: values => {
-            if (georaster.numberOfRasters === 1) {
-              const val = values[0];
-              const norm = (val - georaster.mins[0]) / (georaster.maxs[0] - georaster.mins[0]);
-              const r = Math.floor(255 * (1 - norm));
-              const g = Math.floor(255 * norm);
-              return [r, g, 0, 255]; // red-to-green ramp
+            const r = values[0] || 0;
+            const g = values[1] || 0;
+            const b = values[2] || 0;
+            // If pixel is very dark/black (nodata), return transparent
+            if (r < 10 && g < 10 && b < 10) {
+              return [0, 0, 0, 0];  // rgba(0,0,0,0) = fully transparent
             }
-            return [values[0], values[1], values[2], 255]; // assume RGB
+            // Otherwise return the original RGB with full opacity
+            return [r, g, b, 255];
           }
         });
 
         layer.addTo(map);
-        map.fitBounds(layer.getBounds() || [[51.87, 0.98], [51.89, 1.01]]); // fallback bounds
 
-        // Layer control to toggle ortho visibility
-        L.control.layers({}, { "MFS Orthophoto": layer }, { position: 'topright' }).addTo(map);
+        // Auto-fit to ortho bounds if possible, else fallback
+        try {
+          map.fitBounds(layer.getBounds());
+        } catch (e) {
+          console.warn("Bounds fit failed, staying at current view");
+        }
+
+        // Layer control: toggle ortho visibility (useful for comparing to satellite)
+        L.control.layers({}, { "MFS Orthophoto Overlay": layer }, { position: 'topright' }).addTo(map);
       })
       .catch(err => {
         console.error("Error:", err);
-        status.innerHTML = `Failed: ${err.message}<br>Console has details.<br>Possible: File missing, invalid TIFF, or browser memory limit.`;
+        status.innerHTML = `Failed: ${err.message}<br>Check console (F12).`;
         status.className = 'error';
       });
   </script>
