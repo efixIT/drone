@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes"/>
-  <title>Market Field School – Orthophoto View (Elmstead Market)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Market Field School – Orthophoto View</title>
   
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -12,75 +12,114 @@
   <script src="https://unpkg.com/georaster-layer-for-leaflet@latest/dist/georaster-layer-for-leaflet.min.js"></script>
 
   <style>
-    html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; font-family: Arial, sans-serif; }
-    #map { height: 100%; width: 100%; }
-    #status {
-      position: absolute; top: 15px; left: 15px; z-index: 1000;
-      background: rgba(255, 255, 255, 0.92); padding: 12px 16px;
-      border-radius: 6px; box-shadow: 0 3px 12px rgba(0,0,0,0.35);
-      font-size: 14px; pointer-events: none; transition: opacity 0.6s ease;
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background: #f8f9fa; /* light gray background like many viewer pages */
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
     }
-    #status.loaded { opacity: 0.85; background: rgba(240, 255, 240, 0.9); }
-    #status.error { background: rgba(255, 240, 240, 0.9); border: 1px solid #ffcccc; }
+    
+    .viewer-window {
+      width: 94vw;                  /* almost full width with margin */
+      max-width: 1600px;            /* cap for large screens */
+      height: 92vh;                 /* almost full height */
+      background: white;
+      border: 1px solid #ccc;       /* light border */
+      border-radius: 8px;           /* rounded corners */
+      box-shadow: 0 6px 24px rgba(0,0,0,0.18); /* soft shadow for "window" effect */
+      overflow: hidden;
+      position: relative;
+    }
+    
+    #map {
+      height: 100%;
+      width: 100%;
+    }
+    
+    #status {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      z-index: 1000;
+      background: rgba(255,255,255,0.94);
+      padding: 12px 18px;
+      border-radius: 6px;
+      box-shadow: 0 3px 12px rgba(0,0,0,0.25);
+      font-size: 14px;
+      pointer-events: none;
+      transition: opacity 0.8s ease;
+    }
+    
+    #status.loaded {
+      opacity: 0.9;
+      background: rgba(240,255,245,0.94);
+    }
+    
+    #status.error {
+      background: rgba(255,240,240,0.94);
+      border: 1px solid #ffb3b3;
+    }
   </style>
 </head>
 <body>
-  <div id="map"></div>
-  <div id="status">Loading orthophoto...</div>
+  <div class="viewer-window">
+    <div id="map"></div>
+    <div id="status">Loading orthophoto...</div>
+  </div>
 
   <script>
     const map = L.map('map', {
-      maxZoom: 23,              // Allow very deep zoom for 1.5 cm detail
+      maxZoom: 23,
       zoomSnap: 0.1,
       zoomDelta: 0.4
     }).setView([51.881, 0.995], 17);
 
-    // Satellite basemap (Esri World Imagery)
     L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
       attribution: 'Tiles © Esri — Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, GIS User Community',
       maxZoom: 23,
       maxNativeZoom: 19
     }).addTo(map);
 
-    const url = "mfs-orthophoto.tif";  // ← Change to your exact filename (original or COG if uploaded)
+    const url = "mfs-orthophoto.tif";  // ← confirm exact filename works via direct URL test
     const status = document.getElementById('status');
 
     fetch(url)
       .then(r => {
-        if (!r.ok) throw new Error(`Fetch failed: ${r.status} – check file name/path`);
+        if (!r.ok) throw new Error(`Fetch failed: ${r.status}`);
         return r.arrayBuffer();
       })
       .then(ab => parseGeoraster(ab))
       .then(georaster => {
         status.innerHTML = "Orthophoto loaded – zoom in for detail";
-        status.className = 'loaded';
+        status.classList.add('loaded');
 
         const layer = new GeoRasterLayer({
           georaster,
           opacity: 0.92,
-          resolution: 512,  // High for sharpness; lower to 256 if laggy
+          resolution: 384,
           pixelValuesToColorFn: values => {
             const r = values[0] || 0, g = values[1] || 0, b = values[2] || 0;
-            if (r < 8 && g < 8 && b < 8) return [0, 0, 0, 0];  // Transparent nodata
+            if (r < 8 && g < 8 && b < 8) return [0, 0, 0, 0];
             return [r, g, b, 255];
           }
         });
 
         layer.addTo(map);
 
-        // Auto-center on ortho if bounds available
-        if (layer.getBounds) map.fitBounds(layer.getBounds(), { padding: [40, 40] });
+        if (layer.getBounds) map.fitBounds(layer.getBounds(), { padding: [60, 60] });
 
-        // Clean toggle control
         L.control.layers({}, { "Orthophoto Overlay": layer }, { position: 'topright' }).addTo(map);
 
-        // Optional: Fade out status after 4 seconds
-        setTimeout(() => { status.style.opacity = '0'; }, 4000);
+        setTimeout(() => { status.style.opacity = '0'; }, 4500);
       })
       .catch(err => {
         console.error(err);
-        status.innerHTML = `Error: ${err.message}<br>Check console (F12) or file URL.`;
-        status.className = 'error';
+        status.innerHTML = `Error: ${err.message}<br>Check file name/path (F12 console for details)`;
+        status.classList.add('error');
       });
   </script>
 </body>
