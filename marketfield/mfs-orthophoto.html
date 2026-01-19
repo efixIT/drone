@@ -5,37 +5,35 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>MFS Orthophoto - Elmstead Market</title>
   
-  <!-- Leaflet without integrity (fixes SRI block) -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <!-- Use jsDelivr CDN (often more consistent than unpkg) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
   
-  <!-- Georaster libs -->
   <script src="https://unpkg.com/georaster@latest"></script>
   <script src="https://unpkg.com/georaster-layer-for-leaflet@latest/dist/georaster-layer-for-leaflet.min.js"></script>
 
   <style>
-    body { margin: 0; padding: 0; font-family: Arial, sans-serif; }
-    #map { height: 100vh; width: 100vw; position: relative; }
-    #status { position: absolute; top: 10px; left: 10px; z-index: 9999; background: rgba(255,255,220,0.95); padding: 15px; border: 2px solid #880; border-radius: 8px; max-width: 450px; font-size: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.5); pointer-events: none; }
-    #status.error { background: rgba(255,200,200,0.95); border-color: #c00; }
+    body { margin: 0; padding: 0; }
+    #map { height: 100vh; width: 100vw; }
+    #status { position: absolute; top: 10px; left: 10px; z-index: 1000; background: white; padding: 12px; border: 1px solid #888; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.4); max-width: 400px; }
+    #status.success { background: #e8f5e9; border-color: #4caf50; }
+    #status.error { background: #ffebee; border-color: #f44336; }
   </style>
 </head>
 <body>
   <div id="map">
-    <div id="status">Loading orthophoto... (GeoTIFF parsed successfully if no error below)</div>
+    <div id="status">Loading... Check console (F12) for progress/errors.</div>
   </div>
 
   <script>
-    const map = L.map('map').setView([51.881, 0.995], 16);
+    const map = L.map('map').setView([51.881, 0.995], 17); // Higher zoom start for school detail
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
       maxZoom: 19
     }).addTo(map);
 
-    const url = "mfs-orthophoto.tif";  // same-folder relative path (GitHub Pages serves it fine)
+    const url = "mfs-orthophoto.tif";
     const status = document.getElementById('status');
-
-    status.innerHTML = `Attempting to load: ${url}<br>(Check F12 console if issues)`;
 
     fetch(url)
       .then(r => {
@@ -44,28 +42,39 @@
       })
       .then(ab => parseGeoraster(ab))
       .then(georaster => {
-        console.log("GeoRaster ready:", georaster);
-        status.innerHTML = "Orthophoto loaded & added to map!<br>Zoom in to 17+ around Elmstead Market to see detail.<br>If not visible: check console or try opacity tweak.";
+        console.log("GeoRaster details:", georaster);
+        console.log("Number of bands:", georaster.numberOfRasters);
+        console.log("Mins/Maxes:", georaster.mins, georaster.maxs);
+
+        status.innerHTML = "Orthophoto loaded & added!<br>Zoom/pan around Market Field School.<br>Toggle layer in top-right if needed.";
+        status.className = 'success';
 
         const layer = new GeoRasterLayer({
           georaster,
-          opacity: 0.9,          // Bump if faint
-          resolution: 96,
+          opacity: 0.85,
+          resolution: 128, // Adjust: lower = sharper but slower
+          // Basic coloring fallback if single-band (grayscale ramp)
+          pixelValuesToColorFn: values => {
+            if (georaster.numberOfRasters === 1) {
+              const val = values[0];
+              const norm = (val - georaster.mins[0]) / (georaster.maxs[0] - georaster.mins[0]);
+              const r = Math.floor(255 * (1 - norm));
+              const g = Math.floor(255 * norm);
+              return [r, g, 0, 255]; // red-to-green ramp
+            }
+            return [values[0], values[1], values[2], 255]; // assume RGB
+          }
         });
-        layer.addTo(map);
-        try {
-          map.fitBounds(layer.getBounds(), { padding: [20, 20] });
-        } catch (e) {
-          console.warn("Bounds fit failed – manual zoom needed", e);
-          status.innerHTML += "<br>Auto-zoom failed (bounds issue?) – pan/zoom manually.";
-        }
 
-        // Optional: Add layer control to toggle ortho on/off
-        L.control.layers({}, { "MFS Orthophoto": layer }).addTo(map);
+        layer.addTo(map);
+        map.fitBounds(layer.getBounds() || [[51.87, 0.98], [51.89, 1.01]]); // fallback bounds
+
+        // Layer control to toggle ortho visibility
+        L.control.layers({}, { "MFS Orthophoto": layer }, { position: 'topright' }).addTo(map);
       })
       .catch(err => {
         console.error("Error:", err);
-        status.innerHTML = `Load failed: ${err.message}<br>Console (F12) has details.<br>Try: Convert to COG, or check file exists at ${url}`;
+        status.innerHTML = `Failed: ${err.message}<br>Console has details.<br>Possible: File missing, invalid TIFF, or browser memory limit.`;
         status.className = 'error';
       });
   </script>
