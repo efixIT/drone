@@ -11,80 +11,17 @@
   <script src="https://unpkg.com/georaster-layer-for-leaflet@latest/dist/georaster-layer-for-leaflet.min.js"></script>
 
   <style>
-    body {
-      margin: 0;
-      padding: 0;
-      font-family: Arial, Helvetica, sans-serif;
-      background-color: #f8f9fa;
-      color: #333;
-      display: flex;
-      flex-direction: column;
-      min-height: 100vh;
-    }
-    header {
-      background-color: #2c3e50;
-      color: white;
-      text-align: center;
-      padding: 1.5rem;
-    }
-    h1 {
-      margin: 0;
-      font-size: 2rem;
-    }
-    .container {
-      flex: 1;
-      padding: 1rem;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-    .map-wrapper {
-      width: 100%;
-      max-width: 1280px;
-      aspect-ratio: 16 / 9;
-      min-height: 280px;
-      background: #000;
-      border-radius: 8px;
-      overflow: hidden;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-      position: relative;
-    }
-    #map {
-      width: 100%;
-      height: 100%;
-    }
-    #status {
-      position: absolute;
-      top: 15px;
-      left: 15px;
-      z-index: 1000;
-      background: rgba(255,255,255,0.92);
-      color: #333;
-      padding: 8px 14px;
-      border-radius: 4px;
-      font-size: 14px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-      pointer-events: none;
-      transition: opacity 0.6s ease;
-    }
-    #status.loaded {
-      background: rgba(46, 204, 113, 0.92);
-      color: white;
-    }
-    footer {
-      text-align: center;
-      padding: 1.5rem;
-      background-color: #2c3e50;
-      color: white;
-      font-size: 0.95rem;
-    }
-    a {
-      color: #3498db;
-      text-decoration: none;
-    }
-    a:hover {
-      text-decoration: underline;
-    }
+    body { margin: 0; padding: 0; font-family: Arial, Helvetica, sans-serif; background-color: #f8f9fa; color: #333; display: flex; flex-direction: column; min-height: 100vh; }
+    header { background-color: #2c3e50; color: white; text-align: center; padding: 1.5rem; }
+    h1 { margin: 0; font-size: 2rem; }
+    .container { flex: 1; padding: 1rem; display: flex; flex-direction: column; align-items: center; }
+    .map-wrapper { width: 100%; max-width: 1280px; aspect-ratio: 16 / 9; min-height: 280px; background: #000; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.15); position: relative; }
+    #map { width: 100%; height: 100%; }
+    #status { position: absolute; top: 15px; left: 15px; z-index: 1000; background: rgba(255,255,255,0.92); color: #333; padding: 8px 14px; border-radius: 4px; font-size: 14px; box-shadow: 0 2px 8px rgba(0,0,0,0.2); pointer-events: none; transition: opacity 0.6s ease; }
+    #status.loaded { background: rgba(46, 204, 113, 0.92); color: white; }
+    footer { text-align: center; padding: 1.5rem; background-color: #2c3e50; color: white; font-size: 0.95rem; }
+    a { color: #3498db; text-decoration: none; }
+    a:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
@@ -108,19 +45,18 @@
 
   <script>
     const map = L.map('map', {
-      maxZoom: 24,              // Higher max zoom now possible with COG
+      maxZoom: 24,
       zoomSnap: 0.1,
       zoomDelta: 0.4
-    }).setView([51.8810, 0.9945], 18);  // Centered on Market Field School
+    }).setView([51.8810, 0.9945], 18);
 
-    // Esri World Imagery
     L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
       attribution: '',
       maxZoom: 24,
       maxNativeZoom: 19
     }).addTo(map);
 
-    const url = "mfs-orthophoto_cog_jpeg.tif";  // ← updated to your new COG file
+    const url = "mfs-orthophoto_cog_jpeg.tif";  // ← your new COG JPEG file
 
     const status = document.getElementById('status');
 
@@ -136,32 +72,30 @@
 
         const layer = new GeoRasterLayer({
           georaster,
-          opacity: 0.95,
-          resolution: 512,           // Higher value = sharper at deep zoom (COG makes this fast)
+          opacity: 0.97,
+          resolution: 512,           // Higher for sharper deep zoom (COG handles it efficiently)
+          resampleMethod: "bilinear", // Smoother transitions, less pixelation
           pixelValuesToColorFn: values => {
             const r = values[0] || 0, g = values[1] || 0, b = values[2] || 0;
-            // JPEG compression can make black slightly off 0,0,0 → wider tolerance
-            if (r < 15 && g < 15 && b < 15) return [0, 0, 0, 0];
+            // Wider tolerance for JPEG near-black artifacts
+            if (r < 20 && g < 20 && b < 20) return [0, 0, 0, 0];
             return [r, g, b, 255];
           }
         });
 
         layer.addTo(map);
 
-        // Fit to actual orthophoto bounds (best for showing full coverage)
         if (layer.getBounds) {
           map.fitBounds(layer.getBounds(), { padding: [40, 40] });
         }
 
-        // Layer toggle control
         L.control.layers({}, { "Orthophoto Overlay": layer }, { position: 'topright' }).addTo(map);
 
-        // Auto-hide status
         setTimeout(() => { status.style.opacity = '0'; }, 4500);
       })
       .catch(err => {
         console.error(err);
-        status.innerHTML = `Error: ${err.message}<br>Check filename or console (F12)`;
+        status.innerHTML = `Error: ${err.message}<br>Check console (F12)`;
         status.style.background = 'rgba(231, 76, 60, 0.92)';
         status.style.color = 'white';
       });
