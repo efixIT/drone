@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>MFS Orthophoto - Elmstead Market (Satellite)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes"/>
+  <title>Market Field School – Orthophoto View (Elmstead Market)</title>
   
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -12,80 +12,76 @@
   <script src="https://unpkg.com/georaster-layer-for-leaflet@latest/dist/georaster-layer-for-leaflet.min.js"></script>
 
   <style>
-    body { margin: 0; padding: 0; }
-    #map { height: 100vh; width: 100vw; }
-    #status { position: absolute; top: 10px; left: 10px; z-index: 1000; background: white; padding: 12px; border: 1px solid #888; border-radius: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.4); max-width: 400px; }
-    #status.success { background: #e8f5e9; border-color: #4caf50; }
+    html, body { margin: 0; padding: 0; height: 100%; overflow: hidden; font-family: Arial, sans-serif; }
+    #map { height: 100%; width: 100%; }
+    #status {
+      position: absolute; top: 15px; left: 15px; z-index: 1000;
+      background: rgba(255, 255, 255, 0.92); padding: 12px 16px;
+      border-radius: 6px; box-shadow: 0 3px 12px rgba(0,0,0,0.35);
+      font-size: 14px; pointer-events: none; transition: opacity 0.6s ease;
+    }
+    #status.loaded { opacity: 0.85; background: rgba(240, 255, 240, 0.9); }
+    #status.error { background: rgba(255, 240, 240, 0.9); border: 1px solid #ffcccc; }
   </style>
 </head>
 <body>
-  <div id="map">
-    <div id="status">Loading satellite basemap + orthophoto...</div>
-  </div>
+  <div id="map"></div>
+  <div id="status">Loading orthophoto...</div>
 
   <script>
-  // Increase map maxZoom to allow deeper levels (e.g., 22+ for 1.5 cm detail)
-  const map = L.map('map', {
-    maxZoom: 22,          // ← Set this higher (try 22–25; no upper limit really)
-    zoomSnap: 0.25,       // Optional: smoother zoom steps for fine control
-    zoomDelta: 0.5        // Optional: smaller zoom increments with mouse wheel
-  }).setView([51.881, 0.995], 17);
+    const map = L.map('map', {
+      maxZoom: 23,              // Allow very deep zoom for 1.5 cm detail
+      zoomSnap: 0.1,
+      zoomDelta: 0.4
+    }).setView([51.881, 0.995], 17);
 
-  // Satellite basemap (Esri supports up to ~19–20 natively; will stretch beyond)
-  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-    attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
-    maxZoom: 22,          // ← Match or exceed map's maxZoom
-    maxNativeZoom: 19     // ← Prevents requesting non-existent high-res tiles from Esri (stretches level 19 instead)
-  }).addTo(map);
+    // Satellite basemap (Esri World Imagery)
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+      attribution: 'Tiles © Esri — Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, GIS User Community',
+      maxZoom: 23,
+      maxNativeZoom: 19
+    }).addTo(map);
 
-  // Your orthophoto fetch & layer (unchanged except resolution bump)
-  const url = "mfs-orthophoto.tif";  // Use COG for best high-zoom perf
-  const status = document.getElementById('status');
+    const url = "mfs-orthophoto.tif";  // ← Change to your exact filename (original or COG if uploaded)
+    const status = document.getElementById('status');
 
-  fetch(url)
-    .then(r => {
-      if (!r.ok) throw new Error(`Fetch failed: ${r.status}`);
-      return r.arrayBuffer();
-    })
-    .then(ab => parseGeoraster(ab))
-    .then(georaster => {
-      console.log("GeoRaster details:", georaster);
-      console.log("Bands:", georaster.numberOfRasters);
+    fetch(url)
+      .then(r => {
+        if (!r.ok) throw new Error(`Fetch failed: ${r.status} – check file name/path`);
+        return r.arrayBuffer();
+      })
+      .then(ab => parseGeoraster(ab))
+      .then(georaster => {
+        status.innerHTML = "Orthophoto loaded – zoom in for detail";
+        status.className = 'loaded';
 
-      status.innerHTML = "Orthophoto loaded! Zoom deeper (up to 22+) for 1.5 cm detail.<br>Use top-right toggle to show/hide ortho.";
-      status.className = 'success';
-
-      const layer = new GeoRasterLayer({
-        georaster,
-        opacity: 0.9,
-        resolution: 512,  // ← Higher than before (256–512 range); sharper at deep zoom but slower
-        pixelValuesToColorFn: values => {
-          const r = values[0] || 0;
-          const g = values[1] || 0;
-          const b = values[2] || 0;
-          if (r < 10 && g < 10 && b < 10) {
-            return [0, 0, 0, 0];
+        const layer = new GeoRasterLayer({
+          georaster,
+          opacity: 0.92,
+          resolution: 384,  // High for sharpness; lower to 256 if laggy
+          pixelValuesToColorFn: values => {
+            const r = values[0] || 0, g = values[1] || 0, b = values[2] || 0;
+            if (r < 8 && g < 8 && b < 8) return [0, 0, 0, 0];  // Transparent nodata
+            return [r, g, b, 255];
           }
-          return [r, g, b, 255];
-        }
+        });
+
+        layer.addTo(map);
+
+        // Auto-center on ortho if bounds available
+        if (layer.getBounds) map.fitBounds(layer.getBounds(), { padding: [40, 40] });
+
+        // Clean toggle control
+        L.control.layers({}, { "Orthophoto Overlay": layer }, { position: 'topright' }).addTo(map);
+
+        // Optional: Fade out status after 4 seconds
+        setTimeout(() => { status.style.opacity = '0'; }, 4000);
+      })
+      .catch(err => {
+        console.error(err);
+        status.innerHTML = `Error: ${err.message}<br>Check console (F12) or file URL.`;
+        status.className = 'error';
       });
-
-      layer.addTo(map);
-
-      // Optional: Auto-fit or manual deep zoom hint
-      try {
-        map.fitBounds(layer.getBounds());
-      } catch (e) {
-        console.warn("Bounds fit failed");
-      }
-
-      L.control.layers({}, { "MFS Orthophoto Overlay": layer }, { position: 'topright' }).addTo(map);
-    })
-    .catch(err => {
-      console.error("Error:", err);
-      status.innerHTML = `Failed: ${err.message}<br>Check console (F12).`;
-      status.className = 'error';
-    });
-</script>
+  </script>
 </body>
 </html>
