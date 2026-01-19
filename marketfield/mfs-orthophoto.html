@@ -58,7 +58,7 @@
         const layer = new GeoRasterLayer({
           georaster,
           opacity: 0.92,
-          resolution: 384,  // High for sharpness; lower to 256 if laggy
+          resolution: 512,  // High for sharpness; lower to 256 if laggy
           pixelValuesToColorFn: values => {
             const r = values[0] || 0, g = values[1] || 0, b = values[2] || 0;
             if (r < 8 && g < 8 && b < 8) return [0, 0, 0, 0];  // Transparent nodata
