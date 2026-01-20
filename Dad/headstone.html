@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Stuart Payne, Kirby Cemetery</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background-color: #f8f9fa;
+      color: #333;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+    header {
+      background-color: #2c3e50;
+      color: white;
+      text-align: center;
+      padding: 1.5rem;
+    }
+    h1 {
+      margin: 0;
+      font-size: 2rem;
+    }
+    .container {
+      flex: 1;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .iframe-wrapper {
+      width: 100%;
+      max-width: 1280px;
+      aspect-ratio: 16 / 9;
+      min-height: 280px;
+      background: #000;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+    footer {
+      text-align: center;
+      padding: 1.5rem;
+      background-color: #2c3e50;
+      color: white;
+      font-size: 0.95rem;
+    }
+    a {
+      color: #3498db;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Stuart Payne, Kirby Cemetery</h1>
+    <p>Interactive 3D View</p>
+  </header>
+
+  <div class="container">
+    <div class="iframe-wrapper">
+      <iframe 
+        src="https://poly.cam/capture/DC1CE800-8478-4846-BA04-E653E7A2B574/embed
+        title="Polycam capture viewer – Stuart Payne, Kirby Cemetery"
+        frameborder="0"
+        allowfullscreen
+        allow="xr-spatial-tracking; camera; gyroscope; accelerometer; magnetometer"
+      ></iframe>
+    </div>
+  </div>
+
+  <footer>
+    <p>3D capture and render by <strong>eFix Drone Services</strong><br>
+    Contact: <a href="mailto:hello@efixit.support">hello@efixit.support</a></p>
+  </footer>
+
+</body>
+</html>
