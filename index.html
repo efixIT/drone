@@ -146,40 +146,45 @@
     }
 
     async function loadProjectCard(folder) {
-      try {
-        const url = `${folder}/index.html`;
-        const res = await fetch(url);
-        if (!res.ok) return null;
+  try {
+    const url = `${folder}/index.html`;
+    const res = await fetch(url);
+    if (!res.ok) return null;
 
-        const html = await res.text();
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(html, 'text/html');
+    const html = await res.text();
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
 
-        let title = doc.querySelector('title')?.textContent?.trim() || folder;
-        title = title.split(/[-|–—]/)[0].trim(); // take first part before separator
-
-        if (!title || title === 'Untitled' || title === 'Document') title = folder;
-
-        const desc = doc.querySelector('meta[name="description"]')?.content?.trim() ||
-                     doc.querySelector('meta[property="og:description"]')?.content?.trim() ||
-                     '';
-
-        const card = document.createElement('a');
-        card.href = url;
-        card.className = 'card';
-        card.innerHTML = `
-          <div class="card-content">
-            <h2>${title}</h2>
-            <div class="path">/${folder}/</div>
-            ${desc ? `<p class="desc">${desc}</p>` : ''}
-          </div>
-        `;
-
-        return card;
-      } catch {
-        return null;
-      }
+    // Get title – prioritize <title>, fallback to folder name
+    let title = doc.querySelector('title')?.textContent?.trim();
+    if (!title || title.toLowerCase().includes('efixit') || title === 'Document') {
+      title = folder;  // or a cleaned version: folder.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())
+    } else {
+      // Optional: clean common suffixes (e.g. " | efixIT Support" → just the main part)
+      title = title.split(/[\|\-–—]/)[0].trim();  // take text before first separator
     }
+
+    const desc = doc.querySelector('meta[name="description"]')?.content?.trim() ||
+                 doc.querySelector('meta[property="og:description"]')?.content?.trim() ||
+                 '';
+
+    const card = document.createElement('a');
+    card.href = url;
+    card.className = 'card';
+    card.innerHTML = `
+      <div class="card-content">
+        <h2>${title}</h2>                  <!-- This is the main "button" text now using <title> -->
+        <div class="path">/${folder}/</div>
+        ${desc ? `<p class="desc">${desc}</p>` : ''}
+      </div>
+    `;
+
+    return card;
+  } catch (err) {
+    console.warn(`Failed to load/parse ${folder}:`, err);
+    return null;
+  }
+}
 
     async function main() {
       try {
