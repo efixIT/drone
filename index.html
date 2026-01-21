@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>My Drone Projects • Experiments</title>
+  <style>
+    :root {
+      --bg: #0a0a15;
+      --text: #e0e0ff;
+      --accent: #8a9cff;
+      --card: #161627;
+      --hover: #22223a;
+      --muted: #9090b0;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, sans-serif;
+      line-height: 1.6;
+      padding: 2.5rem 1rem;
+      min-height: 100vh;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* ────────────────────────────────────────────────
+       Very light particle field – survey/sandbox hint
+    ──────────────────────────────────────────────── */
+    .bg-particles {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    .particle {
+      position: absolute;
+      background: var(--accent);
+      border-radius: 50%;
+      opacity: 0.18;
+      pointer-events: none;
+      will-change: transform;
+    }
+
+    header { text-align:center; margin-bottom: 3.5rem; }
+    h1 {
+      font-size: 3rem;
+      color: var(--accent);
+      margin-bottom: 0.5rem;
+    }
+    .intro { color: #b0b0e0; max-width: 640px; margin: 0 auto; font-size: 1.15rem; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.8rem;
+      max-width: 1280px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+    }
+    .card {
+      background: var(--card);
+      border-radius: 14px;
+      border: 1px solid #2a2a48;
+      overflow: hidden;
+      text-decoration: none;
+      color: inherit;
+      transition: all 0.25s ease;
+    }
+    .card:hover {
+      transform: translateY(-8px);
+      border-color: var(--accent);
+      box-shadow: 0 20px 50px rgba(0,0,0,0.45);
+    }
+    .card-content { padding: 1.6rem; }
+    .card h2 {
+      font-size: 1.5rem;
+      color: var(--accent);
+      margin-bottom: 0.5rem;
+    }
+    .card .path {
+      font-family: ui-monospace, monospace;
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-bottom: 0.9rem;
+    }
+    .card .desc {
+      font-size: 0.97rem;
+      color: #d0d0f0;
+      opacity: 0.92;
+    }
+    .empty, .loading, .error {
+      text-align: center;
+      padding: 5rem 1rem;
+      color: var(--muted);
+      font-style: italic;
+    }
+    footer {
+      text-align: center;
+      margin-top: 5rem;
+      color: #606080;
+      font-size: 0.95rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .particle { animation: none !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="bg-particles" id="particles"></div>
+
+  <header>
+    <h1>My Drone Experiments</h1>
+    <p class="intro">Orthophotos, gaussian splats, lidar toys and mapping sketches</p>
+  </header>
+
+  <div class="grid" id="grid"></div>
+
+  <div class="loading" id="loading">Discovering projects…</div>
+  <div class="empty" id="empty" style="display:none;">No projects with index.html found.</div>
+  <div class="error" id="error" style="display:none;"></div>
+
+  <footer>Hosted on GitHub Pages • Matt’s drone corner • 2026</footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/tsparticles@3/tsparticles.bundle.min.js"></script>
+  <script>
+    // ────────────────────────────────────────────────
+    //  Very light particles (tsParticles – low count, slow)
+    // ────────────────────────────────────────────────
+    tsParticles.load("particles", {
+      fullScreen: { enable: true, zIndex: -1 },
+      particles: {
+        number: { value: 28 },
+        color: { value: "#8a9cff" },
+        shape: { type: "circle" },
+        opacity: { value: 0.16, random: { enable: true, minimumValue: 0.08 } },
+        size: { value: 1.4, random: { enable: true, minimumValue: 0.6 } },
+        move: {
+          enable: true,
+          speed: 0.35,
+          direction: "none",
+          random: true,
+          straight: false,
+          outModes: "out",
+          attract: { enable: false }
+        }
+      },
+      interactivity: { events: { onhover: { enable: false } } },
+      detectRetina: true,
+      background: { color: "transparent" }
+    }).then(() => {
+      console.log("Light particles loaded");
+    });
+
+    // ────────────────────────────────────────────────
+    //  Your existing GitHub API discovery logic
+    // ────────────────────────────────────────────────
+    const USER = 'efixlT';
+    const REPO  = 'drone';
+    const BRANCH = 'main';
+
+    const grid    = document.getElementById('grid');
+    const loading = document.getElementById('loading');
+    const empty   = document.getElementById('empty');
+    const errorEl = document.getElementById('error');
+
+    const skip = new Set(['assets', 'img', 'images', 'css', 'js', 'fonts', '.github', 'node_modules']);
+
+    async function getDirectories() {
+      try {
+        const treeUrl = `https://api.github.com/repos/${USER}/${REPO}/git/trees/${BRANCH}?recursive=1`;
+        const res = await fetch(treeUrl, {
+          headers: { 'Accept': 'application/vnd.github.v3+json' }
+        });
+        if (!res.ok) throw new Error(`GitHub API error: ${res.status}`);
+
+        const data = await res.json();
+        if (data.message) throw new Error(data.message);
+
+        const projects = new Map();
+        for (const item of data.tree) {
+          if (item.type !== 'blob') continue;
+          if (!item.path.match(/\/index\.(html|htm)$/i)) continue;
+
+          const parts = item.path.split('/');
+          if (parts.length !== 2) continue;
+
+          const folder = parts[0];
+          if (skip.has(folder)) continue;
+
+          projects.set(folder, true);
+        }
+
+        return [...projects.keys()].sort();
+      } catch (err) {
+        throw err;
+      }
+    }
+
+    async function loadProjectCard(folder) {
+      try {
+        const url = `${folder}/index.html`;
+        const res = await fetch(url);
+        if (!res.ok) return null;
+
+        const html = await res.text();
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+
+        let title = doc.querySelector('title')?.textContent?.trim() || folder;
+        title = title.split(/[\|\-–—]/)[0].trim();
+
+        if (!title || title === 'Untitled' || title === 'Document') title = folder;
+
+        const desc = doc.querySelector('meta[name="description"]')?.content?.trim() ||
+                     doc.querySelector('meta[property="og:description"]')?.content?.trim() ||
+                     '';
+
+        const card = document.createElement('a');
+        card.href = url;
+        card.className = 'card';
+        card.innerHTML = `
+          <div class="card-content">
+            <h2>${title}</h2>
+            <div class="path">/${folder}/</div>
+            ${desc ? `<p class="desc">${desc}</p>` : ''}
+          </div>
+        `;
+
+        return card;
+      } catch {
+        return null;
+      }
+    }
+
+    async function main() {
+      try {
+        const folders = await getDirectories();
+
+        if (folders.length === 0) {
+          loading.style.display = 'none';
+          empty.style.display = 'block';
+          return;
+        }
+
+        for (const folder of folders) {
+          const card = await loadProjectCard(folder);
+          if (card) {
+            grid.appendChild(card);
+          }
+        }
+
+        loading.style.display = 'none';
+
+        if (grid.children.length === 0) {
+          empty.style.display = 'block';
+        }
+      } catch (err) {
+        loading.style.display = 'none';
+        errorEl.style.display = 'block';
+        errorEl.textContent = `Could not load projects: ${err.message}`;
+        console.error(err);
+      }
+    }
+
+    main();
+  </script>
+
+</body>
+</html>
