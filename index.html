@@ -124,8 +124,11 @@
         const projects = new Map();
 
         for (const item of data.tree) {
+  
+
+          // New – accept both .html and .htm
           if (item.type !== 'blob') continue;
-          if (!item.path.endsWith('/index.html')) continue;
+          if (!item.path.match(/\/index\.(html|htm)$/i)) continue;   // case-insensitive too
 
           const parts = item.path.split('/');
           if (parts.length !== 2) continue;               // only top-level folders: folder/index.html
