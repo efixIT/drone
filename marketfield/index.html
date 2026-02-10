@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>School Road - 17/01/2026 Survey Index</title>
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f7fa;
+            color: #333;
+        }
+        header {
+            text-align: center;
+            padding: 20px;
+            background: #007bff;
+            color: white;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        h1 { margin: 0; }
+        .container { max-width: 1100px; margin: 0 auto; }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+        }
+        .card {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+        .card:hover { transform: translateY(-5px); }
+        .card img {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+        }
+        .card-content {
+            padding: 15px;
+            text-align: center;
+        }
+        .card h3 { margin: 10px 0 15px; color: #007bff; }
+        a.button {
+            display: inline-block;
+            padding: 12px 24px;
+            background: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: bold;
+        }
+        a.button:hover { background: #0056b3; }
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            color: #666;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Market Field School Jan 2026</h1>
+        <p>Drone Survey Data - Interactive Views</p>
+    </header>
+
+    <div class="container">
+        <div class="grid">
+            <!-- Point Cloud Card -->
+            <div class="card">
+                <img src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExZTM3c2c0OTl6OXRuOGk0cGw4aGE5ajZkcmM1cjRoYzk3M3N2MTI5dCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/dy4SojYg6sMm71QjXg/giphy.gif" alt="DroneDB Point Cloud Viewer Preview">
+                <div class="card-content">
+                    <h3>3D Point Cloud</h3>
+                    <p>Interactive Potree-style explorer (high-res, measurements, coloring options)</p>
+                    <a href="https://imagary.efixit.support/r/market-field/mfs-full/view/M0QgUG9pbnQgQ2xvdWQvb2RtX2dlb3JlZmVyZW5jZWRfbW9kZWwubGF6/pointcloud" class="button" target="_blank">Open Point Cloud</a>
+                </div>
+            </div>
+
+            <!-- Orthophoto Card -->
+            <div class="card">
+                <img src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExeGRrajl2ZXN1ZjN5d21qeHdhcHk4aDR3NGJyY2cxdmE3Z3BsbXhvOCZlcD12MV9naWZzX3NlYXJjaCZjdD1n/jtzQpQ1gX5LgbRIwIJ/giphy.gif" alt="DroneDB Orthophoto Map Preview"> <!-- Replace with real screenshot -->
+                <div class="card-content">
+                    <h3>Orthophoto</h3>
+                    <p>High-resolution 2D map view with zoom, layers, and measurements</p>
+                    <a href="https://imagary.efixit.support/r/market-field/mfs-full/view/b2RtX29ydGhvcGhvdG8vb2RtX29ydGhvcGhvdG8udGlm/map" class="button" target="_blank">Open Orthophoto</a>
+                </div>
+            </div>
+
+            <!-- Textured Model Card -->
+            <div class="card">
+                <img src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExZDNwbHRydmp0bXI5a3MybDA1c2V1MHFneXp0d3JsOHJncjVjZjNxNSZlcD12MV9naWZzX3NlYXJjaCZjdD1n/l3q2Qbks4N3CZGdQQ/giphy.gif" alt="DroneDB Textured Model Viewer Preview"> <!-- Replace with real screenshot -->
+                <div class="card-content">
+                    <h3>Textured 3D Model</h3>
+                    <p>Nexus viewer for full-color mesh</p>
+                    <a href="https://imagary.efixit.support/r/market-field/mfs-full/view/b2RtX3RleHR1cmluZy9vZG1fdGV4dHVyZWRfbW9kZWxfZ2VvLmdsYg==/model" class="button" target="_blank">Open Textured Model</a>
+                </div>
+            </div>
+	  <!-- Polycam Card -->
+            <div class="card">
+                <img src="https://poly.cam/api/capture/b86b4c3f-9f20-4ca9-8a62-1ed7d4db180b/artifacts/thumbnail.jpg?md5=d74a9a654a228898b745fb9ec0513979" alt="Gaussian 3D Model">     		
+                <div class="card-content">
+                    <h3>Gaussian</h3>
+                    <p>Polycam High resolution Gaussian photogrammetry model</p>
+                    <a href="https://poly.cam/capture/b86b4c3f-9f20-4ca9-8a62-1ed7d4db180b" class="button" target="_blank">Polycam Gaussian</a>
+                </div>
+            </div>
+            <!-- Flight Path & Cameras Card -->
+            <div class="card">
+                <img src="https://i.imgur.com/placeholder-flightmap.jpg" alt="DroneDB Flight Path & Cameras Map Preview"> <!-- Replace with real screenshot -->
+                <div class="card-content">
+                    <h3>Flight Path & Cameras</h3>
+                    <p>Map showing image locations, trajectory, and photo previews</p>
+                    <a href="https://your-dronedb-url/dataset-name/map/images" class="button" target="_blank">Open Flight Map</a>
+                </div>
+            </div>
+	  <!-- DroneDB Card -->
+            <div class="card">
+                <img src="https://dronedb.app/wp-content/uploads/2021/07/dronedb.png" alt="DroneDB Login"> <!-- Replace with real screenshot -->
+                <div class="card-content">
+                    <h3>DroneDB</h3>
+                    <p>DroneDB Login Page</p>
+                    <a href="https://imagary.efixit.support" class="button" target="_blank">DroneDB Login</a>
+                </div>
+            </div>
+
+        </div>
+
+        <div style="text-align: center; margin: 40px 0;">
+            <a href="https://your-dronedb-url/dataset-name/assets" class="button" style="font-size: 1.2em; padding: 15px 40px;" target="_blank">Download All Assets</a>
+        </div>
+    </div>
+
+    <footer>
+        <p>For optimal 3D viewing (especially textured model), use a desktop/laptop with discrete graphics.<br>
+        Mobile/iPad may show lower texture quality in browser viewers.<br>
+        Contact if links don't work.</p>
+    </footer>
+</body>
+</html>
+
+
+https://poly.cam/capture/b86b4c3f-9f20-4ca9-8a62-1ed7d4db180b
