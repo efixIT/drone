@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- TEMPLATE MARKUP: Change the browser tab title here -->
+    <title>Walton-on-the-Naze Imagery Portal</title>
+    <style>
+        :root {
+            /* TEMPLATE MARKUP: If you change logos later and want to match a different background tone, update this hex code */
+            --bg-color: #eeeeec; 
+            --card-bg: #ffffff;
+            --text-main: #2c3e50;
+            --text-muted: #64748b;
+            --accent-color: #2980b9;
+            --accent-hover: #3498db;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.03);
+            --transition: all 0.3s ease;
+            
+            /* Highlight Colors inside text descriptions */
+            --erosion-color: #e74c3c;
+            --deposition-color: #2980b9;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.6;
+            padding: 40px 20px;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        /* Left-Aligned Header Layout for Wide Logo */
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 50px;
+            border-bottom: 1px solid #cbd5e1;
+            padding-bottom: 30px;
+            gap: 30px;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .logo {
+            max-height: 135px;  
+            width: auto;
+            max-width: 675px;
+            object-fit: contain;
+            display: block;
+        }
+
+        .header-center {
+            text-align: right;
+        }
+
+        header h1 {
+            font-size: 2.4rem;
+            color: var(--text-main);
+            margin-bottom: 5px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        header p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+
+        /* Grid & Cards Styles */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 60px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid #e2e8f0; 
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.02);
+            border-color: #cbd5e1;
+        }
+
+        .thumbnail {
+            height: 200px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+
+        /* TEMPLATE MARKUP: Card 1 Image Source URL */
+        .thumb-pc {
+            background-image: url('https://www.efixit.support/naze/3dlaz1.png');
+        }
+
+        /* TEMPLATE MARKUP: Card 2 Image Source URL */
+        .thumb-ep {
+            background-image: url('https://www.efixit.support/naze/erosion.png');
+        }
+
+        /* TEMPLATE MARKUP: Card 3 Image Source URL */
+        .thumb-ortho {
+            background-image: url('https://www.efixit.support/naze/ortho.png');
+        }
+
+        .badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(0, 0, 0, 0.6);
+            color: #fff;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            backdrop-filter: blur(4px);
+        }
+
+        .hl-erosion {
+            color: #fff;
+            background-color: var(--erosion-color);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+
+        .hl-deposition {
+            color: #fff;
+            background-color: var(--deposition-color);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+
+        .card-content {
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-main);
+            margin-bottom: 10px;
+        }
+
+        .card-description {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            margin-bottom: 20px;
+            flex-grow: 1;
+        }
+
+        .card-action {
+            display: inline-flex;
+            align-items: center;
+            color: var(--accent-color);
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: var(--transition);
+        }
+
+        .card:hover .card-action {
+            color: var(--accent-hover);
+        }
+
+        .card:hover .card-action span {
+            transform: translateX(4px);
+        }
+
+        /* Guide Box Styles */
+        .guide-box {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 25px;
+            border: 1px solid #e2e8f0;
+            border-left: 5px solid var(--accent-color);
+        }
+
+        .guide-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .guide-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+        }
+
+        .guide-col h4 {
+            font-size: 1rem;
+            color: var(--text-main);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 5px;
+        }
+
+        .guide-col ul {
+            list-style: none;
+        }
+
+        .guide-col li {
+            font-size: 0.9rem;
+            color: #475569;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: baseline;
+        }
+
+        .guide-col li strong {
+            color: var(--text-main);
+            min-width: 125px;
+            display: inline-block;
+        }
+
+        .guide-note {
+            grid-column: 1 / -1;
+            background-color: #f8fafc;
+            border: 1px dashed #cbd5e1;
+            padding: 12px 15px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            color: #64748b;
+            margin-top: 5px;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 60px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            border-top: 1px solid #cbd5e1;
+            padding-top: 20px;
+        }
+
+        footer a {
+            color: var(--accent-color);
+            text-decoration: none;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+
+        footer a:hover {
+            color: var(--accent-hover);
+            text-decoration: underline;
+        }
+
+        /* Responsive Layout Adjustments */
+        @media (max-width: 768px) {
+            header {
+                flex-direction: column;
+                align-items: flex-start;
+                text-align: left;
+                gap: 20px;
+            }
+            .header-center {
+                text-align: left;
+                width: 100%;
+            }
+            .logo {
+                max-width: 100%;
+                max-height: 90px;
+            }
+            header h1 {
+                font-size: 2.1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <div class="header-left">
+                <!-- TEMPLATE MARKUP: Change logo link/source path here -->
+                <img src="https://www.efixit.support/efix-logo-wide.jpg" alt="Company Logo" class="logo">
+            </div>
+            <div class="header-center">
+                <!-- TEMPLATE MARKUP: Change main area title here -->
+                <h1>Walton-on-the-Naze</h1>
+                <!-- TEMPLATE MARKUP: Change subtitle description here -->
+                <p>Geospatial Survey & Imagery Datasets</p>
+            </div>
+        </header>
+
+        <!-- Main Tiles Link Grid -->
+        <main class="grid">
+            
+            <!-- CARD ONE START -->
+            <!-- TEMPLATE MARKUP: Change the destination link url inside href="" below -->
+            <a href="https://imagery.efixit.support/r/walton-naze/23rd-may-2026/view/dGVycmFfbGF6L2Nsb3VkX21lcmdlZC5sYXo=/pointcloud" target="_blank" class="card">
+                <!-- Note: The picture link is pulled securely from the CSS block above under ".thumb-pc" -->
+                <div class="thumbnail thumb-pc">
+                    <!-- TEMPLATE MARKUP: Change corner badge text here -->
+                    <span class="badge">3D LAZ</span>
+                </div>
+                <div class="card-content">
+                    <!-- TEMPLATE MARKUP: Change card heading text here -->
+                    <h2 class="card-title">Naze 3D Point Cloud</h2>
+                    <!-- TEMPLATE MARKUP: Change card summary description paragraph here -->
+                    <p class="card-description">Interactive 3D merged cloud environment captured via Terra LAZ survey data mapping the Walton-on-the-Naze terrain.</p>
+                    <!-- TEMPLATE MARKUP: Change button link text line here -->
+                    <div class="card-action">View Point Cloud <span style="display:inline-block; margin-left:5px;">&rarr;</span></div>
+                </div>
+            </a>
+            <!-- CARD ONE END -->
+
+            <!-- CARD TWO START -->
+            <!-- TEMPLATE MARKUP: Change the destination link url inside href="" below -->
+            <a href="https://imagery.efixit.support/r/walton-naze/errosion-profiles/view/TmF6ZSBlcnJvc2lvbiBBcHJpbCAtIE1heSAyMDI2Lmxheg==/pointcloud" target="_blank" class="card">
+                <!-- Note: The picture link is pulled securely from the CSS block above under ".thumb-ep" -->
+                <div class="thumbnail thumb-ep">
+                    <!-- TEMPLATE MARKUP: Change corner badge text here -->
+                    <span class="badge">3D Profile</span>
+                </div>
+                <div class="card-content">
+                    <!-- TEMPLATE MARKUP: Change card heading text here -->
+                    <h2 class="card-title">Naze 3D Erosion Profile</h2>
+                    <!-- TEMPLATE MARKUP: Change card summary description paragraph here. Wrap words in tags to highlight red (hl-erosion) or blue (hl-deposition) -->
+                    <p class="card-description">
+                        Specialized data highlighting coastal <span class="hl-erosion">erosion</span> shifts and material <span class="hl-deposition">deposition</span> patterns over the April – May 2026 timeline.
+                    </p>
+                    <!-- TEMPLATE MARKUP: Change button link text line here -->
+                    <div class="card-action">View Erosion Profile <span style="display:inline-block; margin-left:5px;">&rarr;</span></div>
+                </div>
+            </a>
+            <!-- CARD TWO END -->
+
+            <!-- CARD THREE START -->
+            <!-- TEMPLATE MARKUP: Change the destination link url inside href="" below -->
+            <a href="https://imagery.efixit.support/r/walton-naze/walton-naze/view/bGlkYXJzL3RlcnJhX2RvbS9kb20udGlm/map" target="_blank" class="card">
+                <!-- Note: The picture link is pulled securely from the CSS block above under ".thumb-ortho" -->
+                <div class="thumbnail thumb-ortho">
+                    <!-- TEMPLATE MARKUP: Change corner badge text here -->
+                    <span class="badge">2D Map</span>
+                </div>
+                <div class="card-content">
+                    <!-- TEMPLATE MARKUP: Change card heading text here -->
+                    <h2 class="card-title">Naze 2D Orthographic Projection</h2>
+                    <!-- TEMPLATE MARKUP: Change card summary description paragraph here -->
+                    <p class="card-description">High-resolution LiDAR terrain DOM digital orthophoto map rendering accurate overhead spatial metrics.</p>
+                    <!-- TEMPLATE MARKUP: Change button link text line here -->
+                    <div class="card-action">View Ortho Map <span style="display:inline-block; margin-left:5px;">&rarr;</span></div>
+                </div>
+            </a>
+            <!-- CARD THREE END -->
+
+        </main>
+
+        <!-- Potree Navigation & Survey Specifications Guide Box -->
+        <section class="guide-box">
+            <h3 class="guide-title">
+                Portal Guide & Technical Specifications
+            </h3>
+            <div class="guide-grid">
+                <div class="guide-col">
+                    <h4>Mouse Controls</h4>
+                    <ul>
+                        <li><strong>Left Click + Drag:</strong> Orbit / Rotate view</li>
+                        <li><strong>Right Click + Drag:</strong> Pan / Move camera</li>
+                        <li><strong>Scroll Wheel:</strong> Zoom in / Zoom out</li>
+                    </ul>
+                </div>
+                <div class="guide-col">
+                    <h4>Touch Controls</h4>
+                    <ul>
+                        <li><strong>One Finger Drag:</strong> Orbit / Move camera</li>
+                        <li><strong>Two Finger Drag:</strong> Pan view</li>
+                        <li><strong>Pinch Gesture:</strong> Zoom in / Zoom out</li>
+                    </ul>
+                </div>
+                <div class="guide-col">
+                    <h4>Survey Metadata</h4>
+                    <ul>
+                        <li><strong>Deployment Platform:</strong> DJI Matrice 300 RTK</li>
+                        <li><strong>Sensor Payload:</strong> Zenmuse L2 LiDAR & RGB</li>
+                        <li><strong>Correction Base:</strong> D-RTK 3 GNSS Mobile Station</li>
+                        <li><strong>Target Precision:</strong> Horizontal: 1-3cm | Vertical: 2-5cm</li>
+                    </ul>
+                </div>
+                <div class="guide-note">
+                    <strong>System Compatibility:</strong> The underlying 3D Potree environment is natively optimized for desktop architectures. While touch screens are fully supported for basic viewing, spatial rotation and high-precision orbit tracking can occasionally feel less fluid on mobile or tablet browsers. For the absolute best user experience, a standard mouse setup is highly recommended.
+                </div>
+            </div>
+        </section>
+
+        <footer>
+            <!-- TEMPLATE MARKUP: Update company name, footer copy and support email lines below -->
+            <p>&copy; 2026 eFix IT Drone Operations. For inquiries or data support, contact <a href="mailto:hello@efixit.support">hello@efixit.support</a></p>
+        </footer>
+    </div>
+
+</body>
+</html>
