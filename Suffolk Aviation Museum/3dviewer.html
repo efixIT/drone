@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>eFix Drone Operations - Compact Viewer</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            margin: 0;
+            padding: 40px 20px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            background-color: #121212; /* Dark site background */
+            color: #e0e0e0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* Compact, self-contained widget card */
+        .brand-widget {
+            width: 100%;
+            max-width: 800px; /* Reduced width */
+            background-color: #141414;
+            border: 1px solid #2a2a2a;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+        }
+
+        /* Expanded branded header inside the widget */
+        .widget-header {
+            padding: 18px 24px;
+            border-bottom: 1px solid #222;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #181818;
+        }
+        .widget-brand {
+            display: flex;
+            align-items: center;
+        }
+        
+        /* Interactive Link Styling */
+        .widget-logo-link {
+            display: block;
+            transition: opacity 0.2s ease, filter 0.2s ease;
+        }
+        .widget-logo-link:hover {
+            opacity: 0.9;
+            filter: brightness(1.15); /* Light transition on hover */
+        }
+
+        /* Transparent banner image styling */
+        .widget-logo-img {
+            height: 39px; /* Strong visual presence */
+            width: auto;  /* Scales perfectly without distortion */
+            display: block;
+            border: none;
+        }
+        
+        /* Text wrapper for the right side of the header */
+        .widget-meta-container {
+            text-align: right;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .widget-info {
+            font-size: 0.85rem;
+            color: #eeeeee;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .widget-subinfo {
+            font-size: 0.75rem;
+            color: #888888;
+            font-weight: 400;
+            margin: 0;
+        }
+
+        /* Compact 3D viewport */
+        .widget-viewport {
+            height: 500px; /* Reduced height */
+            position: relative;
+            background-color: #050505;
+        }
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- This card can be dropped directly into any page layout -->
+    <div class="brand-widget">
+        <div class="widget-header">
+            <div class="widget-brand">
+                <!-- Clickable Raw GitHub link for the transparent eFix logo -->
+                <a class="widget-logo-link" href="https://efixdroneops.co.uk" target="_blank" rel="noopener">
+                    <img class="widget-logo-img" 
+                         src="https://raw.githubusercontent.com/efixIT/drone/refs/heads/main/efix-logo-white-transparent.png" 
+                         alt="eFix Drone Operations Logo">
+                </a>
+            </div>
+            <div class="widget-meta-container">
+                <p class="widget-info">Suffolk Aviation Museum</p>
+                <p class="widget-subinfo">imagery by efixdroneops.co.uk</p>
+            </div>
+        </div>
+        <div class="widget-viewport">
+            <iframe 
+                src="https://imagery.efixdroneops.co.uk/r/suffolk-aviation-museum/july-2026/view/dGVycmFfbGF6L1N1ZmZvbGsgQXZpYXRpb24gbXVzZXVtLmxheg==/pointcloud?embed=1" 
+                loading="lazy"
+                allowfullscreen="true" 
+                webkitallowfullscreen="true" 
+                mozallowfullscreen="true" 
+                allow="fullscreen; xr-spatial-tracking">
+            </iframe>
+        </div>
+    </div>
+
+</body>
+</html>
