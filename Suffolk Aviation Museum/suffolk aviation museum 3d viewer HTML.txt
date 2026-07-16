@@ -2,7 +2,7 @@
 <div class="efix-brand-widget">
     <div class="efix-widget-header">
         <div class="efix-widget-brand">
-            <!-- Clickable Raw GitHub link for the transparent eFix logo -->
+            <!-- Clickable Logo linking to your homepage -->
             <a class="efix-widget-logo-link" href="https://efixdroneops.co.uk" target="_blank" rel="noopener">
                 <img class="efix-widget-logo-img" 
                      src="https://raw.githubusercontent.com/efixIT/drone/refs/heads/main/efix-logo-white-transparent.png" 
@@ -10,8 +10,11 @@
             </a>
         </div>
         <div class="efix-widget-meta-container">
-            <p class="efix-widget-info">Suffolk Aviation Museum</p>
-            <p class="efix-widget-subinfo">imagery by efixdroneops.co.uk</p>
+            <!-- Clickable Credit linking to your homepage -->
+            <a class="efix-widget-text-link" href="https://efixdroneops.co.uk" target="_blank" rel="noopener">
+                <p class="efix-widget-info">Suffolk Aviation Museum</p>
+                <p class="efix-widget-subinfo">imagery by efixdroneops.co.uk</p>
+            </a>
         </div>
     </div>
     <div class="efix-widget-viewport">
@@ -54,6 +57,7 @@
         align-items: center;
     }
     
+    /* Interactive Link Styling for the Logo */
     .efix-widget-logo-link {
         display: block;
         transition: opacity 0.2s ease, filter 0.2s ease;
@@ -71,6 +75,17 @@
         border: none;
     }
     
+    /* Interactive Link Styling for the Text */
+    .efix-widget-text-link {
+        text-decoration: none;
+        display: block;
+        transition: opacity 0.2s ease;
+    }
+
+    .efix-widget-text-link:hover {
+        opacity: 0.8;
+    }
+
     .efix-widget-meta-container {
         text-align: right;
         display: flex;
@@ -84,6 +99,12 @@
         font-weight: 600;
         margin: 0;
         line-height: 1.2;
+        transition: color 0.2s ease;
+    }
+
+    /* Change the main text color on hover for better interactivity feedback */
+    .efix-widget-text-link:hover .efix-widget-info {
+        color: #ffffff;
     }
 
     .efix-widget-subinfo {
@@ -92,6 +113,12 @@
         font-weight: 400;
         margin: 0;
         line-height: 1.2;
+        transition: color 0.2s ease;
+    }
+
+    /* Highlight the domain name on hover */
+    .efix-widget-text-link:hover .efix-widget-subinfo {
+        color: #00bcd4; /* Subtle accent color change on hover */
     }
 
     .efix-widget-viewport {
